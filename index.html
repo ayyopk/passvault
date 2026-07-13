@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08111f">
-  <title>PassVault 1.0</title>
+  <title>PassVault 1.1.1</title>
   <style>
     :root{
       --bg:#08111f;--panel:#101b2d;--panel2:#142238;--line:#263750;
@@ -24,7 +24,7 @@
     .version{font-size:12px;color:var(--muted);margin-left:6px}
     .search-wrap{flex:1;max-width:620px;position:relative}
     .search{width:100%;height:42px;border-radius:12px;border:1px solid var(--line);background:#0c1727;color:var(--text);
-      padding:0 14px 0 40px;outline:none}
+      padding:0 14px 0 40px;outline:none;font-size:15px}
     .search:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(54,211,153,.14)}
     .search-icon{position:absolute;left:14px;top:11px;color:var(--muted)}
     .top-actions{margin-left:auto;display:flex;gap:8px}
@@ -43,6 +43,7 @@
     .item:hover,.item.active{border-color:#36506e;background:#162741}.item .icon{width:38px;height:38px;border-radius:10px;background:#20334f;
       display:grid;place-items:center;font-weight:800}.item-main{min-width:0;flex:1}.item-title{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .item-sub{font-size:12px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    mark{background:rgba(251,191,36,.28);color:#fff3c4;padding:0 .12em;border-radius:4px}
     .star{color:var(--yellow)}
     .detail{display:flex;flex-direction:column}.detail-body{padding:18px;overflow:auto}.detail-empty{height:100%;display:grid;place-items:center;color:var(--muted);text-align:center;padding:30px}
     .detail-title-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px}.detail-title{font-size:22px;font-weight:800;flex:1}
@@ -66,19 +67,26 @@
     .report{background:#0d192a;border:1px solid var(--line);border-radius:12px;padding:12px;line-height:1.8}
     .mobile-tabbar{display:none}
     @media(max-width:900px){
-      .topbar{height:auto;flex-wrap:wrap;padding:12px}.brand{width:100%}.search-wrap{order:3;max-width:none;width:100%}.top-actions{position:absolute;right:12px;top:12px}
+      .topbar{height:auto;flex-wrap:wrap;padding:14px}.brand{width:100%;font-size:24px}.search-wrap{order:3;max-width:none;width:100%}.top-actions{position:absolute;right:12px;top:14px}
+      .search{height:56px;border-radius:16px;padding:0 16px 0 48px;font-size:22px}
+      .search-icon{left:16px;top:17px;font-size:22px}
       .layout{grid-template-columns:1fr;padding:10px;padding-bottom:82px}.sidebar,.detail{display:none}.layout.show-folders .sidebar{display:flex}.layout.show-detail .list-panel{display:none}.layout.show-detail .detail{display:flex}
       .panel{border-radius:14px}.toolbar .desktop-only,.desktop-only{display:none!important}
-      .mobile-tabbar{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;bottom:0;left:0;right:0;height:68px;background:#091525;border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
-      .mobile-tabbar button{border:none;background:transparent;color:var(--muted);font-size:12px}.mobile-tabbar button.active{color:var(--green)}
-      .detail-body{padding:16px}.notice{margin:10px}
+      .toolbar{padding:14px}.btn{height:44px;font-size:16px}.status{font-size:15px}
+      .items{padding:12px}.item{padding:16px 14px;margin-bottom:10px;border-radius:14px}.item .icon{width:44px;height:44px;font-size:19px}
+      .item-title{font-size:24px}.item-sub{font-size:17px;line-height:1.35;margin-top:6px}.folder{padding:14px 12px;font-size:18px}.panel-head{font-size:18px}
+      .detail-title{font-size:28px}.field label{font-size:14px}.value,.edit-input,.edit-textarea,.edit-select{font-size:20px;min-height:52px}
+      .meta{font-size:14px}.notice{margin:10px;font-size:15px}
+      .mobile-tabbar{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;bottom:0;left:0;right:0;height:72px;background:#091525;border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+      .mobile-tabbar button{border:none;background:transparent;color:var(--muted);font-size:14px}.mobile-tabbar button.active{color:var(--green)}
+      .detail-body{padding:16px}
     }
   </style>
 </head>
 <body>
 <div id="login" class="login">
   <div class="login-card">
-    <h1>PassVault <span style="color:var(--green)">1.0</span></h1>
+    <h1>PassVault <span style="color:var(--green)">1.1.1</span></h1>
     <p>電腦可編輯、手機唯讀。密碼庫以 AES-GCM 加密後存放在你的 iCloud Drive；GitHub Pages 只放程式，不放密碼。</p>
     <div class="login-actions">
       <label class="file-label">開啟加密密碼庫（.pvault）
@@ -148,7 +156,7 @@
 <div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
 
 <script>
-const APP_VERSION="1.0", SCHEMA_VERSION=1, MOBILE_BREAKPOINT=900;
+const APP_VERSION="1.1.1", SCHEMA_VERSION=1, MOBILE_BREAKPOINT=900;
 const encoder=new TextEncoder(), decoder=new TextDecoder();
 let vault=null, selectedId=null, currentFolder="all", onlyFav=false, dirty=false, unlockPayload=null, masterKeyPassword="";
 let readonlyMode=window.matchMedia(`(max-width:${MOBILE_BREAKPOINT}px)`).matches;
@@ -158,6 +166,14 @@ const nowIso=()=>new Date().toISOString();
 const uid=()=>crypto.randomUUID?crypto.randomUUID():"id-"+Date.now()+"-"+Math.random().toString(16).slice(2);
 const escapeHTML=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const iconText=t=>(t||"?").trim().slice(0,1).toUpperCase();
+function highlightMatch(text,q){
+  const base=String(text??"");
+  if(!q) return escapeHTML(base||"未命名");
+  const safe=escapeHTML(base);
+  const escapedQ=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return safe.replace(new RegExp(escapedQ,'gi'),m=>`<mark>${m}</mark>`);
+}
+function folderNameById(id){return vault?.folders?.find(f=>f.id===id)?.name||""}
 
 function emptyVault(){
   return {schemaVersion:SCHEMA_VERSION,appVersion:APP_VERSION,createdAt:nowIso(),updatedAt:nowIso(),
@@ -231,15 +247,20 @@ function lockApp(){
 }
 function render(){
   renderFolders();renderItems();renderDetail();
-  $("#countStatus").textContent=`${filteredItems().length} / ${vault.items.length} 筆${dirty?" · 尚未匯出":""}`;
+  const q=$("#searchInput").value.trim();
+  $("#countStatus").textContent=q
+    ? `找到 ${filteredItems().length} 筆結果${dirty&&!readonlyMode?" · 尚未匯出":""}`
+    : `${filteredItems().length} / ${vault.items.length} 筆${dirty&&!readonlyMode?" · 尚未匯出":""}`;
 }
 function filteredItems(){
   const q=$("#searchInput").value.trim().toLowerCase();
+  const hasQuery=!!q;
   return vault.items.filter(i=>{
-    if(currentFolder!=="all"&&i.folderId!==currentFolder)return false;
+    if(!hasQuery && currentFolder!=="all" && i.folderId!==currentFolder)return false;
     if(onlyFav&&!i.favorite)return false;
-    if(!q)return true;
-    return [i.title,i.account,i.url,i.notes].some(x=>(x||"").toLowerCase().includes(q));
+    if(!hasQuery)return true;
+    const folderName=folderNameById(i.folderId);
+    return [i.title,i.account,i.url,i.notes,folderName].some(x=>(x||"").toLowerCase().includes(q));
   }).sort((a,b)=>(b.favorite-a.favorite)||a.title.localeCompare(b.title,"zh-Hant"));
 }
 function renderFolders(){
@@ -251,9 +272,18 @@ function renderFolders(){
 }
 function renderItems(){
   const arr=filteredItems();
-  $("#items").innerHTML=arr.length?arr.map(i=>`<div class="item ${selectedId===i.id?"active":""}" data-id="${escapeHTML(i.id)}">
-    <div class="icon">${escapeHTML(iconText(i.title))}</div><div class="item-main"><div class="item-title">${escapeHTML(i.title||"未命名")}</div>
-    <div class="item-sub">${escapeHTML(i.account||i.url||"尚未填寫帳號")}</div></div>${i.favorite?'<span class="star">★</span>':""}</div>`).join("")
+  const q=$("#searchInput").value.trim();
+  $("#items").innerHTML=arr.length?arr.map(i=>{
+    const subText=i.account||i.url||i.notes||"尚未填寫帳號";
+    return `<div class="item ${selectedId===i.id?"active":""}" data-id="${escapeHTML(i.id)}">
+      <div class="icon">${escapeHTML(iconText(i.title))}</div>
+      <div class="item-main">
+        <div class="item-title">${highlightMatch(i.title||"未命名",q)}</div>
+        <div class="item-sub">${highlightMatch(subText,q)}</div>
+      </div>
+      ${i.favorite?'<span class="star">★</span>':""}
+    </div>`;
+  }).join("")
     :`<div class="detail-empty">找不到符合條件的項目</div>`;
   $$("#items .item").forEach(el=>el.onclick=()=>{selectedId=el.dataset.id;mobileTab("detail");render()});
 }
@@ -295,14 +325,31 @@ function renderEdit(box,i){
     <div class="field"><label>備註</label><textarea class="edit-textarea" data-field="notes">${escapeHTML(i.notes)}</textarea></div>
     <div class="meta">建立：${new Date(i.createdAt).toLocaleString()}<br>最後更新：${new Date(i.updatedAt).toLocaleString()}</div>`;
   $$("[data-field]").forEach(el=>el.oninput=()=>{
-    i[el.dataset.field]=el.value;i.updatedAt=nowIso();vault.updatedAt=nowIso();dirty=true;renderItems();$("#countStatus").textContent=`${filteredItems().length} / ${vault.items.length} 筆 · 尚未匯出`;
+    i[el.dataset.field]=el.value;i.updatedAt=nowIso();vault.updatedAt=nowIso();dirty=true;renderItems();
+    const q=$("#searchInput").value.trim();
+    $("#countStatus").textContent=q?`找到 ${filteredItems().length} 筆結果 · 尚未匯出`:`${filteredItems().length} / ${vault.items.length} 筆 · 尚未匯出`;
   });
   $("#favBtn").onclick=()=>{i.favorite=!i.favorite;i.updatedAt=nowIso();dirty=true;render()};
   $("#deleteBtn").onclick=()=>confirm("確定刪除這筆帳密？")&&(vault.items=vault.items.filter(x=>x.id!==i.id),selectedId=null,dirty=true,render());
   $$("[data-copy]").forEach(b=>b.onclick=()=>copyText(i[b.dataset.copy]||""));
+  $$("[data-toggle-password]").forEach(button=>{
+    button.onclick=()=>{
+      const row=button.closest(".value-row");
+      const input=row?.querySelector('input[data-field="password"]');
+      if(!input)return;
+      const willShow=input.type==="password";
+      input.type=willShow?"text":"password";
+      button.textContent=willShow?"🙈":"👁";
+      button.title=willShow?"隱藏密碼":"顯示密碼";
+      input.focus({preventScroll:true});
+      const end=input.value.length;
+      try{input.setSelectionRange(end,end)}catch(e){}
+    };
+  });
 }
 function editField(label,key,value,password=false){
-  return `<div class="field"><label>${label}</label><div class="value-row"><input ${password?'type="password"':""} class="edit-input ${password?"mono":""}" data-field="${key}" value="${escapeHTML(value)}">
+  return `<div class="field"><label>${label}</label><div class="value-row"><input ${password?'type="password"':'type="text"'} class="edit-input ${password?"mono":""}" data-field="${key}" value="${escapeHTML(value)}">
+  ${password?`<button class="icon-btn" data-toggle-password="${key}" title="顯示／隱藏">👁</button>`:""}
   <button class="icon-btn" data-copy="${key}">⧉</button></div></div>`;
 }
 async function copyText(text){
@@ -370,7 +417,7 @@ $("#unlockBtn").onclick=async()=>{
 };
 $("#masterPassword").onkeydown=e=>e.key==="Enter"&&$("#unlockBtn").click();
 $("#newVaultBtn").onclick=()=>{vault=emptyVault();masterKeyPassword="";dirty=true;showApp()};
-$("#searchInput").oninput=render;$("#allFilter").onclick=()=>{onlyFav=false;render()};$("#favFilter").onclick=()=>{onlyFav=true;render()};
+$("#searchInput").oninput=()=>{ if(readonlyMode&&innerWidth<=MOBILE_BREAKPOINT) mobileTab("list"); render(); };$("#allFilter").onclick=()=>{onlyFav=false;render()};$("#favFilter").onclick=()=>{onlyFav=true;render()};
 $("#addBtn").onclick=addItem;$("#saveBtn").onclick=exportVault;$("#lockBtn").onclick=()=>{if(dirty&&!confirm("尚未匯出最新修改，仍要鎖定嗎？"))return;lockApp()};
 $$(".mobile-tabbar button").forEach(b=>b.onclick=()=>mobileTab(b.dataset.tab));
 $("#modal").onclick=e=>{if(e.target===$("#modal"))closeModal()};
