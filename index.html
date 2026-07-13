@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08111f">
-  <title>PassVault 1.1.6</title>
+  <title>PassVault</title>
   <style>
     :root{
       --bg:#08111f;--panel:#101b2d;--panel2:#142238;--line:#263750;
@@ -20,8 +20,9 @@
     .app{min-height:100vh;display:flex;flex-direction:column}
     .topbar{height:68px;padding:0 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);
       background:rgba(8,17,31,.92);backdrop-filter:blur(14px);position:sticky;top:0;z-index:20}
-    .brand{font-weight:800;font-size:20px;white-space:nowrap}.brand span{color:var(--green)}
-    .version{font-size:12px;color:var(--muted);margin-left:6px}
+    .brand{font-weight:800;font-size:20px;white-space:nowrap;display:flex;align-items:baseline;gap:7px}
+    .brand>span{color:var(--text)}.brand-version{color:var(--green);font-size:14px;font-weight:850}
+    .version{font-size:12px;color:var(--muted);margin-left:3px}
     .search-wrap{flex:1;max-width:620px;position:relative}
     .search{width:100%;height:42px;border-radius:12px;border:1px solid var(--line);background:#0c1727;color:var(--text);
       padding:0 14px 0 40px;outline:none;font-size:15px}
@@ -38,11 +39,16 @@
     .layout{display:grid;grid-template-columns:230px minmax(280px,1fr) minmax(320px,430px);gap:14px;padding:14px;flex:1;min-height:0}
     .panel{background:rgba(16,27,45,.88);border:1px solid var(--line);border-radius:var(--radius);min-height:0;overflow:hidden}
     .sidebar{display:flex;flex-direction:column}.panel-head{padding:16px;border-bottom:1px solid var(--line);font-weight:700}
-    .folders{padding:10px;overflow:auto}.folder{width:100%;border:none;background:transparent;color:var(--text);display:flex;
+    .folders{padding:10px;overflow:auto;flex:1}.folder{width:100%;border:none;background:transparent;color:var(--text);display:flex;
       align-items:center;justify-content:space-between;padding:11px 12px;border-radius:10px;text-align:left}
     .folder:hover,.folder.active{background:#192943}.folder small{color:var(--muted)}
+    .pending-dot,.pending-item-label{display:inline-block;background:var(--yellow);color:#332600;border-radius:999px;font-size:10px;font-weight:900;padding:2px 6px;vertical-align:middle;margin-left:5px}
     .folder.has-new{background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.62);color:#fff4c2}
     .folder.has-new small{color:#fcd34d;font-weight:800}
+    .vault-status{margin:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0d192a}
+    .vault-status-label{font-size:11px;color:var(--muted);margin-bottom:5px}.vault-status-name{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:10px}
+    .vault-status-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:7px}.vault-status-row b{color:#c9d7e8;font-weight:700;text-align:right}
+    .vault-status-row b.unsaved{color:var(--yellow)}.vault-status-row b.saved{color:#86efac}
     .list-panel{display:flex;flex-direction:column}.toolbar{padding:12px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
     .status{font-size:12px;color:var(--muted);margin-left:auto}.items{overflow:auto;padding:10px}
     .item{border:1px solid transparent;border-radius:12px;padding:13px;margin-bottom:8px;background:#111f33;display:flex;gap:12px;align-items:center}
@@ -55,7 +61,12 @@
     mark{background:rgba(251,191,36,.28);color:#fff3c4;padding:0 .12em;border-radius:4px}
     .complete-btn{color:#2d2300;background:var(--yellow);border-color:var(--yellow);font-weight:900}
     .complete-btn:hover{background:#f59e0b;border-color:#f59e0b}
-    .draft-note{margin:-4px 0 16px;padding:10px 12px;border-radius:10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);color:#fde68a;font-size:13px}
+    .draft-note{margin:0 0 18px;padding:12px 14px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.48);color:#fde68a;font-size:13px;line-height:1.55}
+    .draft-actions{display:flex;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+    .draft-complete{flex:1;height:48px;border:1px solid var(--yellow);border-radius:12px;background:var(--yellow);color:#2d2300;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+    .draft-complete:hover{background:#f59e0b;border-color:#f59e0b}
+    .draft-cancel{height:48px;padding:0 18px;border:1px solid var(--line);border-radius:12px;background:#13223a;color:var(--text);font-weight:700}
+    .draft-cancel:hover{background:#1b2d47}
     .detail{display:flex;flex-direction:column}.detail-body{padding:18px;overflow:auto}.detail-empty{height:100%;display:grid;place-items:center;color:var(--muted);text-align:center;padding:30px}
     .detail-title-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px}.detail-title{font-size:22px;font-weight:800;flex:1}
     .field{margin-bottom:14px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}
@@ -67,7 +78,11 @@
     .notice{margin:14px;padding:12px 14px;border:1px solid #315272;background:#10243a;border-radius:12px;color:#c9d7e8;font-size:13px}
     .login{min-height:100vh;display:grid;place-items:center;padding:24px}
     .login-card{width:min(460px,100%);background:rgba(16,27,45,.95);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
-    .login h1{margin:0 0 8px}.login p{color:var(--muted);line-height:1.6}.login-actions{display:grid;gap:10px;margin-top:20px}
+    .login-brand{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.login h1{margin:0}.login-version{color:var(--green);font-size:18px;font-weight:850}
+    .login p{color:var(--muted);line-height:1.6}.login-actions{display:grid;gap:10px;margin-top:20px}
+    .release-note{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted)}
+    .release-note summary{cursor:pointer;font-size:13px;font-weight:750;color:#c8d6e8}
+    .release-content{display:grid;gap:7px;margin-top:12px;font-size:12px}.release-content b{color:var(--text)}
     .file-label{display:flex;align-items:center;justify-content:center;height:46px;border:1px dashed #3b5573;border-radius:12px;background:#102039;cursor:pointer}
     .file-label:hover{border-color:var(--green)}.file-label input{display:none}
     .pass-row{display:flex;gap:8px;margin-top:12px}.pass-row input{flex:1;height:44px;border:1px solid var(--line);border-radius:10px;background:#0b1727;color:var(--text);padding:0 12px}
@@ -102,7 +117,7 @@
 <body>
 <div id="login" class="login">
   <div class="login-card">
-    <h1>PassVault <span style="color:var(--green)">1.1.6</span></h1>
+    <div class="login-brand"><h1>PassVault</h1><span class="login-version" id="loginVersion"></span></div>
     <p>電腦可編輯、手機唯讀。密碼庫以 AES-GCM 加密後存放在你的 iCloud Drive；GitHub Pages 只放程式，不放密碼。</p>
     <div class="login-actions">
       <label class="file-label">開啟加密密碼庫（.pvault）
@@ -121,12 +136,23 @@
       <p id="loginMsg" class="small"></p>
     </div>
     <p class="small">提醒：主密碼不會儲存在檔案中，忘記後無法復原。</p>
+    <details class="release-note">
+      <summary>版本資訊</summary>
+      <div class="release-content">
+        <b>PassVault 2.0</b>
+        <span>✓ 電腦草稿與完成新增流程</span>
+        <span>✓ 手機唯讀與跨分類搜尋</span>
+        <span>✓ 黃色未備份提示</span>
+        <span>✓ AES-GCM 加密 .pvault</span>
+        <span>✓ 舊版 HTML 匯入檢查</span>
+      </div>
+    </details>
   </div>
 </div>
 
 <div id="app" class="app hidden">
   <header class="topbar">
-    <div class="brand">PassVault<span id="appVersion">1.1.6</span><small class="version" id="modeLabel"></small></div>
+    <div class="brand"><span>PassVault</span><small class="brand-version" id="appVersion"></small><small class="version" id="modeLabel"></small></div>
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
       <input id="searchInput" class="search" placeholder="搜尋標題、帳號、備註">
@@ -147,6 +173,12 @@
     <aside class="panel sidebar">
       <div class="panel-head">分類</div>
       <div id="folders" class="folders"></div>
+      <div class="vault-status desktop-only">
+        <div class="vault-status-label">目前密碼庫</div>
+        <div class="vault-status-name" id="vaultFileName">尚未命名</div>
+        <div class="vault-status-row"><span>最後更新</span><b id="vaultUpdatedAt">—</b></div>
+        <div class="vault-status-row"><span>備份狀態</span><b id="backupState">—</b></div>
+      </div>
     </aside>
 
     <section class="panel list-panel">
@@ -174,9 +206,9 @@
 <div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
 
 <script>
-const APP_VERSION="1.1.6", SCHEMA_VERSION=1, MOBILE_BREAKPOINT=900;
+const APP_VERSION="2.0", SCHEMA_VERSION=1, MOBILE_BREAKPOINT=900;
 const encoder=new TextEncoder(), decoder=new TextDecoder();
-let vault=null, selectedId=null, currentFolder="all", dirty=false, unlockPayload=null, masterKeyPassword="";
+let vault=null, selectedId=null, currentFolder="all", dirty=false, unlockPayload=null, masterKeyPassword="", currentVaultName="尚未命名";
 let readonlyMode=window.matchMedia(`(max-width:${MOBILE_BREAKPOINT}px)`).matches;
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -192,6 +224,14 @@ function highlightMatch(text,q){
   return safe.replace(new RegExp(escapedQ,'gi'),m=>`<mark>${m}</mark>`);
 }
 function folderNameById(id){return vault?.folders?.find(f=>f.id===id)?.name||""}
+
+function applyVersion(){
+  document.title=`PassVault ${APP_VERSION}`;
+  const loginVersion=$("#loginVersion"),appVersion=$("#appVersion");
+  if(loginVersion)loginVersion.textContent=`v${APP_VERSION}`;
+  if(appVersion)appVersion.textContent=`v${APP_VERSION}`;
+}
+applyVersion();
 
 function emptyVault(){
   return {schemaVersion:SCHEMA_VERSION,appVersion:APP_VERSION,createdAt:nowIso(),updatedAt:nowIso(),
@@ -251,7 +291,7 @@ function convertLegacy(appData){
 }
 function showApp(){
   $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
-  $("#appVersion").textContent=APP_VERSION;
+  applyVersion();
   $("#modeLabel").textContent=readonlyMode?"手機唯讀":"電腦編輯";
   $("#addBtn").classList.toggle("hidden",readonlyMode);$("#saveBtn").classList.toggle("hidden",readonlyMode);
   if(readonlyMode && innerWidth<=MOBILE_BREAKPOINT){
@@ -263,17 +303,27 @@ function showApp(){
   render();
 }
 function lockApp(){
-  vault=null;selectedId=null;masterKeyPassword="";unlockPayload=null;dirty=false;
+  vault=null;selectedId=null;masterKeyPassword="";unlockPayload=null;dirty=false;currentVaultName="尚未命名";
   $("#app").classList.add("hidden");$("#login").classList.remove("hidden");$("#unlockBox").classList.add("hidden");
   $("#masterPassword").value="";setMsg("");
 }
 function render(){
-  renderFolders();renderItems();renderDetail();
+  renderFolders();renderItems();renderDetail();renderVaultStatus();
   const q=$("#searchInput").value.trim();
   const total=vault.items.filter(i=>!i.isDraft).length;
   $("#countStatus").textContent=q
     ? `找到 ${filteredItems().length} 筆結果${dirty&&!readonlyMode?" · 尚未匯出":""}`
     : `${filteredItems().length} / ${total} 筆${dirty&&!readonlyMode?" · 尚未匯出":""}`;
+}
+function renderVaultStatus(){
+  const name=$("#vaultFileName"),updated=$("#vaultUpdatedAt"),state=$("#backupState");
+  if(!name||!updated||!state||!vault)return;
+  name.textContent=currentVaultName||"尚未命名";
+  updated.textContent=vault.updatedAt?new Date(vault.updatedAt).toLocaleString():"—";
+  const hasDraft=vault.items.some(i=>i.isDraft);
+  if(hasDraft){state.textContent="有未完成草稿";state.className="unsaved";}
+  else if(dirty){state.textContent="尚未匯出";state.className="unsaved";}
+  else{state.textContent="已備份";state.className="saved";}
 }
 function filteredItems(){
   const q=$("#searchInput").value.trim().toLowerCase();
@@ -295,7 +345,7 @@ function renderFolders(){
   });
   const totalPending=completed.some(i=>i.pendingBackup);
   let html=`<button class="folder ${currentFolder==="all"?"active":""} ${totalPending?"has-new":""}" data-folder="all"><span>所有項目</span><small>${completed.length}</small></button>`;
-  vault.folders.forEach(f=>html+=`<button class="folder ${currentFolder===f.id?"active":""} ${pending[f.id]?"has-new":""}" data-folder="${escapeHTML(f.id)}"><span>${escapeHTML(f.name)}</span><small>${counts[f.id]||0}</small></button>`);
+  vault.folders.forEach(f=>html+=`<button class="folder ${currentFolder===f.id?"active":""} ${pending[f.id]?"has-new":""}" data-folder="${escapeHTML(f.id)}"><span>${escapeHTML(f.name)}${pending[f.id]?` <b class="pending-dot">NEW</b>`:""}</span><small>${counts[f.id]||0}</small></button>`);
   $("#folders").innerHTML=html;
   $$("#folders .folder").forEach(b=>b.onclick=()=>{currentFolder=b.dataset.folder;mobileTab("list");render()});
 }
@@ -307,7 +357,7 @@ function renderItems(){
     return `<div class="item ${selectedId===i.id?"active":""} ${i.pendingBackup?"is-new-unsaved":""}" data-id="${escapeHTML(i.id)}">
       <div class="icon">${escapeHTML(iconText(i.title))}</div>
       <div class="item-main">
-        <div class="item-title">${highlightMatch(i.title||"未命名",q)}</div>
+        <div class="item-title">${highlightMatch(i.title||"未命名",q)}${i.pendingBackup?` <span class="pending-item-label">新增</span>`:""}</div>
         <div class="item-sub">${highlightMatch(subText,q)}</div>
       </div>
     </div>`;
@@ -343,14 +393,16 @@ function bindViewButtons(i){
 function renderEdit(box,i){
   const opts=vault.folders.map(f=>`<option value="${escapeHTML(f.id)}" ${i.folderId===f.id?"selected":""}>${escapeHTML(f.name)}</option>`).join("");
   box.innerHTML=`<div class="detail-title-row"><input class="edit-input" data-field="title" value="${escapeHTML(i.title)}" placeholder="標題">
-    ${i.isDraft?`<button class="icon-btn complete-btn" id="completeBtn" title="完成新增">✓</button>`:""}
-    <button class="icon-btn" id="deleteBtn" title="刪除">✕</button></div>
-    ${i.isDraft?`<div class="draft-note">填寫完成後，請按右上角 ✓，這筆資料才會正式放入所選分類。</div>`:""}
+    ${i.isDraft?"":`<button class="icon-btn" id="deleteBtn" title="刪除">✕</button>`}</div>
+    ${i.isDraft?`<div class="draft-note"><b>新增帳密尚未完成</b><br>填寫內容並選擇分類後，請按下方「✓ 完成新增」。</div>`:""}
     <div class="field"><label>分類</label><select class="edit-select" data-field="folderId">${opts}</select></div>
     ${editField("帳號","account",i.account)}
     ${editField("密碼","password",i.password,true)}
     <div class="field"><label>備註</label><textarea class="edit-textarea" data-field="notes">${escapeHTML(i.notes)}</textarea></div>
-    <div class="meta">建立：${new Date(i.createdAt).toLocaleString()}<br>最後更新：${new Date(i.updatedAt).toLocaleString()}</div>`;
+    ${i.isDraft?`<div class="draft-actions">
+      <button class="draft-cancel" id="cancelDraftBtn">取消</button>
+      <button class="draft-complete" id="completeBtn"><span style="font-size:21px">✓</span> 完成新增</button>
+    </div>`:`<div class="meta">建立：${new Date(i.createdAt).toLocaleString()}<br>最後更新：${new Date(i.updatedAt).toLocaleString()}</div>`}`;
   $$("[data-field]").forEach(el=>el.oninput=()=>{
     i[el.dataset.field]=el.value;i.updatedAt=nowIso();vault.updatedAt=nowIso();dirty=true;renderItems();
     const q=$("#searchInput").value.trim();
@@ -360,18 +412,28 @@ function renderEdit(box,i){
   if(i.isDraft){
     $("#completeBtn").onclick=()=>{
       if(!i.title.trim()){alert("請先輸入標題");return;}
+      if(!i.account.trim()){alert("請先輸入帳號");return;}
+      if(!i.password){alert("請先輸入密碼");return;}
       if(!i.folderId){alert("請先選擇分類");return;}
       i.isDraft=false;
       i.pendingBackup=true;
       i.updatedAt=nowIso();
       vault.updatedAt=nowIso();
       currentFolder=i.folderId;
+      selectedId=null;
       dirty=true;
       render();
       toast("新增完成，尚未匯出備份");
     };
+    $("#cancelDraftBtn").onclick=()=>{
+      if(!confirm("確定取消這筆新增資料嗎？"))return;
+      vault.items=vault.items.filter(x=>x.id!==i.id);
+      selectedId=null;
+      render();
+    };
+  }else{
+    $("#deleteBtn").onclick=()=>confirm("確定刪除這筆帳密？")&&(vault.items=vault.items.filter(x=>x.id!==i.id),selectedId=null,dirty=true,render());
   }
-  $("#deleteBtn").onclick=()=>confirm(i.isDraft?"確定取消這筆新增資料嗎？":"確定刪除這筆帳密？")&&(vault.items=vault.items.filter(x=>x.id!==i.id),selectedId=null,dirty=true,render());
   $$("[data-copy]").forEach(b=>b.onclick=()=>copyText(i[b.dataset.copy]||""));
   $$("[data-toggle-password]").forEach(button=>{
     button.onclick=()=>{
@@ -409,8 +471,11 @@ function openModal(html){$("#modalCard").innerHTML=html;$("#modal").classList.re
 function closeModal(){$("#modal").classList.add("hidden")}
 function addItem(){
   const folder=currentFolder==="all"?(vault.folders[0]?.id||""):currentFolder;
-  const i={id:uid(),title:"",account:"",password:"",notes:"",folderId:folder,createdAt:nowIso(),updatedAt:nowIso()};
-  vault.items.unshift(i);selectedId=i.id;dirty=true;render();
+  const i={id:uid(),title:"",account:"",password:"",notes:"",folderId:folder,isDraft:true,pendingBackup:false,createdAt:nowIso(),updatedAt:nowIso()};
+  vault.items.unshift(i);
+  selectedId=i.id;
+  render();
+  setTimeout(()=>document.querySelector('[data-field="title"]')?.focus(),0);
 }
 async function exportVault(){
   if(!masterKeyPassword){
@@ -431,13 +496,14 @@ async function doExport(){
   vault.updatedAt=nowIso();const payload=await encryptVault(vault,masterKeyPassword);
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const a=document.createElement("a"),date=new Date().toISOString().slice(0,10).replaceAll("-","");
-  a.href=URL.createObjectURL(blob);a.download=`PassVault_${date}.pvault`;a.click();URL.revokeObjectURL(a.href);dirty=false;render();toast("已匯出加密備份");
+  a.href=URL.createObjectURL(blob);a.download=`PassVault_${date}.pvault`;currentVaultName=a.download;a.click();URL.revokeObjectURL(a.href);dirty=false;render();toast("已匯出加密備份");
 }
 async function readText(file){return await file.text()}
 async function handleVaultFile(file){
   try{
     unlockPayload=JSON.parse(await readText(file));
     if(unlockPayload.format!=="passvault")throw new Error();
+    currentVaultName=file.name;
     $("#unlockBox").classList.remove("hidden");setMsg(`已選擇：${file.name}`,"good");$("#masterPassword").focus();
   }catch{setMsg("這不是有效的 .pvault 檔案","bad")}
 }
@@ -446,10 +512,11 @@ async function handleLegacyFile(file){
     const doc=new DOMParser().parseFromString(await readText(file),"text/html");
     const node=doc.getElementById("embedded-data");if(!node)throw new Error("找不到 embedded-data");
     const legacy=JSON.parse(node.textContent);const converted=convertLegacy(legacy);
+    currentVaultName=file.name;
     const oldCount=Object.keys(legacy.tasks||{}).length,newCount=converted.items.length;
-    openModal(`<h2>舊版資料轉換完成</h2><div class="report">舊版帳密：${oldCount} 筆<br>新版帳密：${newCount} 筆<br>分類：${converted.folders.length} 個<br>遺失：${Math.max(0,oldCount-newCount)} 筆</div>
+    openModal(`<h2>HTML 匯入分析</h2><div class="report">舊版帳密：${oldCount} 筆<br>新版帳密：${newCount} 筆<br>分類：${converted.folders.length} 個<br>遺失：${Math.max(0,oldCount-newCount)} 筆</div>
     <p class="small">原始 HTML 不會被修改。確認後只會在瀏覽器記憶體中開啟，之後請匯出新的加密 .pvault。</p>
-    <div class="modal-actions"><button class="btn" onclick="closeModal()">取消</button><button id="acceptLegacy" class="btn primary">開啟轉換結果</button></div>`);
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">取消</button><button id="acceptLegacy" class="btn primary">確認轉換並開啟</button></div>`);
     $("#acceptLegacy").onclick=()=>{vault=normalizeVault(converted);masterKeyPassword="";dirty=true;closeModal();showApp()};
   }catch(e){setMsg("讀取舊版失敗："+e.message,"bad")}
 }
@@ -461,7 +528,7 @@ $("#unlockBtn").onclick=async()=>{
   catch{setMsg("主密碼錯誤，或檔案已損毀","bad")}
 };
 $("#masterPassword").onkeydown=e=>e.key==="Enter"&&$("#unlockBtn").click();
-$("#newVaultBtn").onclick=()=>{vault=emptyVault();masterKeyPassword="";dirty=true;showApp()};
+$("#newVaultBtn").onclick=()=>{vault=emptyVault();masterKeyPassword="";currentVaultName="新的密碼庫";dirty=true;showApp()};
 $("#searchInput").oninput=()=>{ if(readonlyMode&&innerWidth<=MOBILE_BREAKPOINT) mobileTab("list"); render(); };
 $("#backToFoldersBtn").onclick=()=>{
   $("#searchInput").value="";
