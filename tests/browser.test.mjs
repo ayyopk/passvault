@@ -6,6 +6,9 @@ import { createServer } from '../scripts/serve.mjs';
 import { sampleVault, TEST_PASSWORD, originalCrypto, legacyData } from './fixtures.mjs';
 import { decryptVault } from '../src/crypto.js';
 import { APP_VERSION } from '../src/version.js';
+import { standaloneName } from '../scripts/build.mjs';
+import { pathToFileURL } from 'node:url';
+import path from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium, webkit, devices } = require('playwright');
 const server = createServer(); server.listen(0, '127.0.0.1'); await once(server, 'listening');
@@ -188,5 +191,45 @@ try {
     } finally { await browser.close(); }
   }
   assert.deepEqual(errors, []);
+  const standaloneBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await standaloneBrowser.newContext();
+    const page = await context.newPage();
+    page.on('dialog', dialog => dialog.accept());
+    page.on('pageerror', error => errors.push(error.message));
+    await check('直接開啟 index.html 顯示未載入提示', async () => {
+      await page.goto(pathToFileURL(path.resolve('index.html')).href);
+      assert.equal(await page.locator('#startupNotice').isVisible(), true);
+    });
+    await check('單檔 file:// 顯示版本號並成功匯入旧 HTML', async () => {
+      await page.goto(pathToFileURL(path.resolve(standaloneName)).href);
+      assert.equal(await page.locator('#loginVersion').textContent(), 'v' + APP_VERSION);
+      assert.equal(await page.locator('#startupNotice').isVisible(), false);
+      const legacy = legacyData(); delete legacy.columnOrder;
+      await page.locator('#legacyFile').setInputFiles({ name: 'fake-legacy.html', mimeType: 'text/html', buffer: Buffer.from(`<script id="embedded-data" type="application/json">${JSON.stringify(legacy)}</script>`) });
+      await page.locator('#acceptLegacy').click(); assert.equal(await page.locator('#items .item').count(), 3);
+      await page.locator('[data-id="legacy-1"]').click();
+      assert.equal(await page.locator('[data-field="password"]').inputValue(), 'FAKE-ONLY-legacy!');
+      await page.locator('#lockBtn').click();
+    });
+    await check('沒有 embedded-data 的 HTML 顯示原因，同一檔可重新選取', async () => {
+      const file = { name: 'fake-app.html', mimeType: 'text/html', buffer: Buffer.from('<!doctype html><title>FAKE App only</title>') };
+      await page.locator('#legacyFile').setInputFiles(file);
+      await page.waitForFunction(() => document.querySelector('#loginMsg').textContent.includes('沒有舊版內嵌資料'));
+      assert.equal(await page.locator('#loginMsg').isVisible(), true);
+      assert.equal(await page.locator('#unlockBox').isVisible(), false);
+      await page.evaluate(() => { document.querySelector('#loginMsg').textContent = ''; });
+      await page.locator('#legacyFile').setInputFiles(file);
+      await page.waitForFunction(() => document.querySelector('#loginMsg').textContent.includes('沒有舊版內嵌資料'));
+      assert.equal(await page.locator('#legacyFile').inputValue(), '');
+    });
+    await check('單檔 file:// 解鎖舊版加密密碼庫', async () => {
+      await unlock(page);
+      assert.equal(await page.locator('#items .item').count(), 2);
+      await page.locator('[data-id="test-1"]').click();
+      assert.equal(await page.locator('[data-field="password"]').inputValue(), 'FAKE-ONLY-bank-123!');
+    });
+    assert.deepEqual(errors, []); await context.close();
+  } finally { await standaloneBrowser.close(); }
   console.log(`Browser checks passed: ${passed}; page errors: 0`);
 } finally { server.close(); }

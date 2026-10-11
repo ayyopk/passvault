@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { APP_VERSION } from '../src/version.js';
+import { standaloneHtml, standaloneName } from '../scripts/build.mjs';
+import vm from 'node:vm';
 import { normalizeVault, contentSnapshot, addDraft, updateItem, completeDraft, removeItem, convertLegacy } from '../src/model.js';
 import { encryptVault, decryptVault, validatePayload } from '../src/crypto.js';
 import { searchItems } from '../src/search.js';
@@ -105,4 +107,18 @@ test('新版版本號僅由 version.js 提供，畫面沒有寫死號碼', () =>
   const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.ok(!html.includes(APP_VERSION)); assert.ok(!html.includes('PassVault 2.0'));
   for (const id of ['loginVersion', 'appVersion', 'releaseVersion']) assert.ok(html.includes(`id="${id}"`));
+});
+test('單檔版本由共同來源生成，沒有模組或外部樣式且語法有效', async () => {
+  const html = fs.readFileSync(new URL('../' + standaloneName, import.meta.url), 'utf8');
+  assert.equal(html, await standaloneHtml());
+  assert.ok(!html.includes('type="module"')); assert.ok(!html.includes('href="./styles/app.css"'));
+  assert.equal((html.match(/<script>/g) || []).length, 1);
+  new vm.Script(html.match(/<script>([\s\S]*?)<\/script>/)[1]);
+});
+test('舊版容許省略分類順序與空分類索引，仍保留全部資料', () => {
+  const data = legacyData(); delete data.columnOrder; data.columns['col-empty'] = { title: '虛構空分類' };
+  const converted = convertLegacy(data);
+  assert.equal(converted.items.length, 3);
+  assert.equal(converted.folders.find(f => f.id === 'col-empty').name, '虛構空分類');
+  assert.equal(converted.items.find(i => i.id === 'legacy-2').folderId, 'col-extra');
 });

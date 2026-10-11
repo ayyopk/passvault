@@ -11,6 +11,7 @@
 <div id="login" class="login">
   <div class="login-card">
     <div class="login-brand"><h1>PassVault</h1><span class="login-version" id="loginVersion"></span></div>
+    <p id="startupNotice" class="small danger-text" role="alert">程式尚未載入。若按鈕沒有反應，請改用新版單檔 HTML，或透過本機預覽／GitHub Pages 開啟。</p>
     <p>電腦可編輯、手機唯讀。密碼庫以 AES-GCM 加密後存放在你的 iCloud Drive；GitHub Pages 只放程式，不放密碼。</p>
     <div class="login-actions">
       <label class="file-label">開啟加密密碼庫（.pvault）
@@ -26,8 +27,8 @@
         <input id="masterPassword" type="password" placeholder="輸入主密碼">
         <button id="unlockBtn" class="btn primary">解鎖</button>
       </div>
-      <p id="loginMsg" class="small"></p>
     </div>
+    <p id="loginMsg" class="small" role="status" aria-live="polite"></p>
     <p class="small">提醒：主密碼不會儲存在檔案中，忘記後無法復原。</p>
     <details class="release-note">
       <summary>版本資訊</summary>

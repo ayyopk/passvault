@@ -1,7 +1,7 @@
 import { APP_VERSION } from './version.js';
 import { emptyVault, normalizeVault, contentSnapshot, addDraft, updateItem, completeDraft, removeItem } from './model.js';
 import { encryptVault, decryptVault } from './crypto.js';
-import { readEncryptedFile, readLegacyFile } from './import.js';
+import { readEncryptedFile, readLegacyFile, legacyImportMessage } from './import.js';
 import { searchItems } from './search.js';
 import { isReadonlyDevice, MOBILE_BREAKPOINT, createBackgroundLock } from './platform.js';
 import { exportFilename, prepareExport, acknowledgeExport } from './export.js';
@@ -281,6 +281,7 @@ async function handleVaultFile(file){
 }
 async function handleLegacyFile(file){
   const session=++sessionEpoch;unlockPayload=null;
+  closeModal();$("#unlockBox").classList.add("hidden");setMsg("正在讀取舊版 HTML…");
   try{
     const {converted,oldCount}=await readLegacyFile(file);if(session!==sessionEpoch)return;
     currentVaultName=file.name;
@@ -289,10 +290,10 @@ async function handleLegacyFile(file){
     <p class="small">原始 HTML 不會被修改。確認後只會在瀏覽器記憶體中開啟，之後請匯出新的加密 .pvault。</p>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">取消</button><button id="acceptLegacy" class="btn primary">確認轉換並開啟</button></div>`);
     $("#acceptLegacy").onclick=()=>{vault=converted;baseline=null;masterKeyPassword="";dirty=true;closeModal();showApp()};
-  }catch{if(session===sessionEpoch){$("#unlockBox").classList.remove("hidden");setMsg("讀取舊版失敗：資料結構或索引不完整，未匯入任何資料。","bad")}}
+  }catch(error){if(session===sessionEpoch)setMsg(legacyImportMessage(error),"bad")}
 }
-$("#vaultFile").onchange=e=>e.target.files[0]&&handleVaultFile(e.target.files[0]);
-$("#legacyFile").onchange=e=>e.target.files[0]&&handleLegacyFile(e.target.files[0]);
+$("#vaultFile").onchange=e=>{const file=e.target.files[0];e.target.value="";if(file)handleVaultFile(file)};
+$("#legacyFile").onchange=e=>{const file=e.target.files[0];e.target.value="";if(file)handleLegacyFile(file)};
 $("#unlockBtn").onclick=async()=>{
   const p=$("#masterPassword").value;if(!p)return setMsg("請輸入主密碼","bad");
   const session=++sessionEpoch,payload=unlockPayload;
@@ -322,3 +323,4 @@ window.addEventListener("beforeunload",e=>{if((dirty||vault?.items.some(i=>i.isD
 window.closeModal=closeModal;
 
 $("#newVaultBtn").classList.toggle("hidden",readonlyMode);
+$("#startupNotice").classList.add("hidden");

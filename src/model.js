@@ -57,17 +57,17 @@ export function removeItem(v, id) {
   if (item && !item.isDraft) v.updatedAt = nowIso();
 }
 export function convertLegacy(appData) {
-  if (!record(appData) || !record(appData.columns) || !record(appData.tasks) || !Array.isArray(appData.columnOrder)) throw new Error('舊資料結構不完整');
+  if (!record(appData) || !record(appData.columns) || !record(appData.tasks) || (appData.columnOrder !== undefined && !Array.isArray(appData.columnOrder))) throw new Error('舊資料結構不完整');
   const tasks = appData.tasks, folders = [], items = [], seen = new Set();
-  const order = [...new Set(['col-uncategorized', ...appData.columnOrder, ...Object.keys(appData.columns)])];
+  const order = [...new Set(['col-uncategorized', ...(appData.columnOrder || []), ...Object.keys(appData.columns)])];
   for (const cid of order) {
     if (typeof cid !== 'string') throw new Error('分類順序格式錯誤');
     const c = appData.columns[cid];
     if (c === undefined && cid === 'col-uncategorized') continue;
-    if (!record(c) || !Array.isArray(c.taskIds)) throw new Error('分類或帳密索引錯誤');
+    if (!record(c) || (c.taskIds !== undefined && !Array.isArray(c.taskIds))) throw new Error('分類或帳密索引錯誤');
     const fid = cid === 'col-uncategorized' ? 'uncategorized' : cid;
     folders.push({ id: fid, name: text(c, 'title', '未命名分類') });
-    for (const key of c.taskIds) {
+    for (const key of c.taskIds || []) {
       if (typeof key !== 'string' || !Object.hasOwn(tasks, key) || seen.has(key)) throw new Error('舊帳密索引遺失或重複');
       seen.add(key);
       items.push(convertTask(tasks[key], key, fid));
