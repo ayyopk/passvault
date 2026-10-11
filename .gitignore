@@ -1,0 +1,11 @@
+node_modules/
+test-results/
+playwright-report/
+*.pvault
+*.csv
+*.tsv
+*.log
+.env*
+private/
+downloads/
+artifacts/
