@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08111f">
+  <title>PassVault</title>
+  <link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<div id="login" class="login">
+  <div class="login-card">
+    <div class="login-brand"><h1>PassVault</h1><span class="login-version" id="loginVersion"></span></div>
+    <p>電腦可編輯、手機唯讀。密碼庫以 AES-GCM 加密後存放在你的 iCloud Drive；GitHub Pages 只放程式，不放密碼。</p>
+    <div class="login-actions">
+      <label class="file-label">開啟加密密碼庫（.pvault）
+        <input id="vaultFile" type="file" accept=".pvault,application/json">
+      </label>
+      <label class="file-label">匯入 .HTML
+        <input id="legacyFile" type="file" accept=".html,text/html">
+      </label>
+      <button id="newVaultBtn" class="btn ghost">建立新的空白密碼庫</button>
+    </div>
+    <div id="unlockBox" class="hidden">
+      <div class="pass-row">
+        <input id="masterPassword" type="password" placeholder="輸入主密碼">
+        <button id="unlockBtn" class="btn primary">解鎖</button>
+      </div>
+      <p id="loginMsg" class="small"></p>
+    </div>
+    <p class="small">提醒：主密碼不會儲存在檔案中，忘記後無法復原。</p>
+    <details class="release-note">
+      <summary>版本資訊</summary>
+      <div class="release-content">
+        <b id="releaseVersion"></b>
+        <span>✓ 電腦草稿與完成新增流程</span>
+        <span>✓ 手機唯讀與跨分類搜尋</span>
+        <span>✓ 黃色未備份提示</span>
+        <span>✓ AES-GCM 加密 .pvault</span>
+        <span>✓ 舊版 HTML 匯入檢查</span>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <header class="topbar">
+    <div class="brand"><span>PassVault</span><small class="brand-version" id="appVersion"></small><small class="version" id="modeLabel"></small></div>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input id="searchInput" class="search" placeholder="搜尋標題、帳號、備註">
+      <button id="backToFoldersBtn" class="search-back" type="button" aria-label="返回上一層" title="返回上一層">
+        <svg class="return-arrow-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 5 8 12l7 7"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="top-actions">
+      <button id="addBtn" class="btn primary desktop-only">＋ 新增</button>
+      <button id="saveBtn" class="btn desktop-only">匯出備份</button>
+      <button id="lockBtn" class="btn ghost">鎖定</button>
+    </div>
+  </header>
+
+  <main id="layout" class="layout">
+    <aside class="panel sidebar">
+      <div class="panel-head">分類</div>
+      <div id="folders" class="folders"></div>
+      <div class="vault-status desktop-only">
+        <div class="vault-status-label">目前密碼庫</div>
+        <div class="vault-status-name" id="vaultFileName">尚未命名</div>
+        <div class="vault-status-row"><span>最後更新</span><b id="vaultUpdatedAt">—</b></div>
+        <div class="vault-status-row"><span>備份狀態</span><b id="backupState">—</b></div>
+      </div>
+    </aside>
+
+    <section class="panel list-panel">
+      <div class="toolbar">
+        <button id="allFilter" class="btn">全部</button>
+        <span id="countStatus" class="status"></span>
+      </div>
+      <div id="items" class="items"></div>
+    </section>
+
+    <section class="panel detail">
+      <div id="detailBody" class="detail-body">
+        <div class="detail-empty">選擇一筆帳號<br>即可查看詳細內容</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-tabbar">
+    <button data-tab="folders">分類</button>
+    <button data-tab="list">帳號</button>
+    <button data-tab="detail">詳細</button>
+  </nav>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
+
+<script type="module" src="./src/app.js"></script>
+</body>
+</html>

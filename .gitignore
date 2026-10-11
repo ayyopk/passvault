@@ -9,3 +9,6 @@ playwright-report/
 private/
 downloads/
 artifacts/
+*.html
+!/index.html
+!/PassVault_2.0.html

@@ -1,0 +1,11 @@
+{
+  "name": "passvault",
+  "private": true,
+  "type": "module",
+  "devDependencies": { "playwright": "1.62.1" },
+  "scripts": {
+    "test": "node --test tests/core.test.mjs",
+    "test:browser": "node tests/browser.test.mjs",
+    "serve": "node scripts/serve.mjs"
+  }
+}
