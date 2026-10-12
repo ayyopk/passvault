@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v2.1 — 開發版，2026-10-12，未發佈
+## v2.1 — 2026-10-12，使用者已確認正式更新
 
 來源：使用者提供的 PassVault_2.1_GitHub_Package.zip；保留單檔結構與原版介面。
 
@@ -33,7 +33,7 @@ PC 初始畫面與使用者提供 v2.1 參考程式截圖像素一致。詳細�
 
 schemaVersion 1、AES-GCM 256、PBKDF2-SHA256、250000 iterations、16-byte salt、12-byte IV 及 Base64 欄位維持不變。保留 v2.0 缺省 iterations 的解密行為。拒絕無效型別、未知 schema、重複 ID、孤立分類參照及大於 2000000 的 iterations；拒絕時不改來源檔。v2.0 產生的密碼庫與新版匯出均完成雙向解密測試。
 
-保留正式 main 提交 04f5ef5d863bf5f2f510e8b8b2791250e9d7a3a4、v2.0 標籤及本機原始檔。此輪沒有合併或部署；正式網站仍可照常使用 v2.0。實際 iPhone Safari、iCloud 選檔及系統剪貼簿仍待虛構資料實機驗收。
+保留更新前 main 提交 04f5ef5d863bf5f2f510e8b8b2791250e9d7a3a4、v2.0 標籤及本機原始檔。使用者於 2026-10-12 確認更新正式網站，沿用 main 的 Pages 設定發佈 v2.1。實際 iPhone Safari、iCloud 選檔及系統剪貼簿仍待虛構資料實機驗證。
 
 ## v2.0 — 已驗收的正式版本
 

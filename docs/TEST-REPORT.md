@@ -2,6 +2,8 @@
 
 日期：2026-10-12。測試資料全部為 FAKE-ONLY、example.invalid 與明確虛構中文內容。沒有讀取真實密碼做測試。
 
+本報告記錄正式更新前的檢查。使用者其後於 2026-10-12 確認將已測試的 v2.1 更新至正式網站；原測試結果與回退基準保留。
+
 ## 結果
 
 - 核心：13 項通過，0 項失敗。
@@ -44,7 +46,7 @@ tests/baseline-probe.mjs 對未修改 v2.1 使用虛構資料：
 ## 正式網站與資料基準
 
 Repository：ayyopk/passvault，public；Pages：https://ayyopk.github.io/passvault/ ，main `/`，HTTPS 開啟。
-正式提交：04f5ef5d863bf5f2f510e8b8b2791250e9d7a3a4；正式版本仍為 v2.0。開發內容只在 development/v2.1 與待驗收 PR。
+測試時的正式提交：04f5ef5d863bf5f2f510e8b8b2791250e9d7a3a4（v2.0），作為更新後的回退基準。v2.1 經使用者確認後由 PR 合併至 main 發佈。
 
 來源 v2.1 SHA-256：9ED9FA9928240DEC7F7B33E475C711B3A3212919DE87D632F2B53EBB466251A1。
 本機原始 v2.0 SHA-256：A02ACEF826DFB6FD20314AB2E3000EAC1984D5998FA2AAE6E3491BC7C3E3CC6E，未修改。
@@ -55,6 +57,6 @@ Repository：ayyopk/passvault，public；Pages：https://ayyopk.github.io/passva
 2. 用虛構資料在看板移動、管理資料夾與逐字 Twitter 搜尋；與熟悉操作核對。
 3. 手動把虛構 .pvault／加密 HTML 放進 iCloud，在真實 iPhone Safari 選檔、解鎖、查閱與貼上複製內容。
 4. Safari 切背景／鎖屏超過 30 秒後回前景應鎖定；短暫背景與橫向／請求桌面網站仍唯讀。
-5. 確認接受後再決定合併及更新 Pages。此輪不部署。
+5. 使用者已確認正式更新；若實機發現問題，保留原備份並依回退說明處理。
 
 JavaScript 在背景被暫停時無法保證準時執行；回前景事件會檢查期限。清除應用程式參照及 DOM 不代表能安全覆寫 JavaScript／瀏覽器／作業系統記憶體；複製內容仍受系統剪貼簿管理。

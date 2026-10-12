@@ -1,13 +1,13 @@
 # PassVault v2.1 開發版
 
-正式版本仍是 v2.0。本分支 `development/v2.1` 以使用者提供的 `PassVault_2.1_GitHub_Package.zip` 為基礎，待驗收；沒有合併 main 或更新正式 Pages。
+正式版本為 v2.1，以使用者提供的 `PassVault_2.1_GitHub_Package.zip` 為基礎完成檢查與修正，2026-10-12 獲使用者確認更新正式網站。v2.0 原始檔與備份標籤保留。
 
 ## 現有 GitHub 與 Pages
 
 - Repository：https://github.com/ayyopk/passvault （public）
-- 正式分支：main，檢查時提交 `04f5ef5d863bf5f2f510e8b8b2791250e9d7a3a4`。
+- 正式分支：main；更新前的 v2.0 提交為 `04f5ef5d863bf5f2f510e8b8b2791250e9d7a3a4`，可用於回退。
 - Pages：https://ayyopk.github.io/passvault/ ，從 main 的根目錄 `/` 發佈，legacy build，HTTPS 已啟用。
-- v2.0 備份標籤保留。本輪不更改 Pages 設定、不合併、不部署，也不啟用自動合併。
+- v2.0 備份標籤保留，沿用既有 Pages 設定；正式更新由使用者確認後合併 PR 發佈。
 
 ## 使用方式
 
@@ -66,4 +66,4 @@ GitHub 只放無密碼資料的程式、文件與虛構測試。不要加入 .pv
 
 應用程式沒有遠端脚本、分析、錯誤回報、fetch API 或第三方字型下載。測試只使用 FAKE-ONLY 與 example.invalid 資料。真正帳密、主密碼、iCloud 檔案不能交给 AI 或加入測試。
 
-本輪正式 main 不變，可直接繼續使用 v2.0。未來經使用者確認發佈後若需回退，透過新的回退提交還原 main 的原始 index.html；不 force push、不改密碼庫格式，先保留舊 .pvault。v2.0 不呈現新增的顏色與收合等管理狀態，回退時請保留完整新版備份，避免較新額外欄位在舊版再次匯出時被忽略。
+若需回退，透過新的回退提交還原 main 的 v2.0 index.html；不 force push、不改密碼庫格式，先保留舊 .pvault。v2.0 不呈現新增的顏色與收合等管理狀態，回退時請保留完整新版備份，避免較新額外欄位在舊版再次匯出時被忽略。
