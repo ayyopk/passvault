@@ -1,0 +1,17 @@
+node_modules/
+.maintenance/
+test-results/
+playwright-report/
+*.pvault
+*.csv
+*.tsv
+*.txt
+*.zip
+*.log
+.env*
+*.html
+!/index.html
+!/tests/reference-v2.1.html
+private/
+downloads/
+artifacts/

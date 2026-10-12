@@ -1,0 +1,12 @@
+{
+  "name": "passvault-maintenance",
+  "private": true,
+  "type": "module",
+  "devDependencies": { "playwright": "1.62.1" },
+  "scripts": {
+    "test": "node --test tests/core.test.mjs",
+    "test:browser": "node tests/browser.test.mjs",
+    "test:security": "node tests/repository.test.mjs",
+    "serve": "node tests/server.mjs"
+  }
+}
