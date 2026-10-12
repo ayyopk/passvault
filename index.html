@@ -1,549 +1,238 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#08111f">
-  <title>PassVault</title>
-  <style>
-    :root{
-      --bg:#08111f;--panel:#101b2d;--panel2:#142238;--line:#263750;
-      --text:#f4f7fb;--muted:#8ea1bb;--green:#36d399;--green2:#19b97f;
-      --red:#fb7185;--yellow:#fbbf24;--blue:#60a5fa;--radius:16px;
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;min-height:100%;background:linear-gradient(145deg,#07101d,#0e1c2f);color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
-    button,input,textarea,select{font:inherit}
-    button{cursor:pointer}
-    .hidden{display:none!important}
-    .app{min-height:100vh;display:flex;flex-direction:column}
-    .topbar{height:68px;padding:0 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);
-      background:rgba(8,17,31,.92);backdrop-filter:blur(14px);position:sticky;top:0;z-index:20}
-    .brand{font-weight:800;font-size:20px;white-space:nowrap;display:flex;align-items:baseline;gap:7px}
-    .brand>span{color:var(--text)}.brand-version{color:var(--green);font-size:14px;font-weight:850}
-    .version{font-size:12px;color:var(--muted);margin-left:3px}
-    .search-wrap{flex:1;max-width:620px;position:relative}
-    .search{width:100%;height:42px;border-radius:12px;border:1px solid var(--line);background:#0c1727;color:var(--text);
-      padding:0 14px 0 40px;outline:none;font-size:15px}
-    .search:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(54,211,153,.14)}
-    .search-icon{position:absolute;left:14px;top:11px;color:var(--muted)}
-    .search-back{display:none;position:absolute;border:1px solid #315272;background:#142943;color:#dfffee;
-      align-items:center;justify-content:center;border-radius:11px;padding:0}
-    .search-back:hover{background:#1b3856;border-color:var(--green)}
-    .return-arrow-icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-    .top-actions{margin-left:auto;display:flex;gap:8px}
-    .btn{height:40px;border-radius:10px;border:1px solid var(--line);padding:0 14px;background:#122138;color:var(--text)}
-    .btn:hover{background:#172943}.btn.primary{background:var(--green);border-color:var(--green);color:#052e23;font-weight:800}
-    .btn.primary:hover{background:var(--green2)}.btn.danger{color:#fecdd3}.btn.ghost{background:transparent}
-    .layout{display:grid;grid-template-columns:230px minmax(280px,1fr) minmax(320px,430px);gap:14px;padding:14px;flex:1;min-height:0}
-    .panel{background:rgba(16,27,45,.88);border:1px solid var(--line);border-radius:var(--radius);min-height:0;overflow:hidden}
-    .sidebar{display:flex;flex-direction:column}.panel-head{padding:16px;border-bottom:1px solid var(--line);font-weight:700}
-    .folders{padding:10px;overflow:auto;flex:1}.folder{width:100%;border:none;background:transparent;color:var(--text);display:flex;
-      align-items:center;justify-content:space-between;padding:11px 12px;border-radius:10px;text-align:left}
-    .folder:hover,.folder.active{background:#192943}.folder small{color:var(--muted)}
-    .pending-dot,.pending-item-label{display:inline-block;background:var(--yellow);color:#332600;border-radius:999px;font-size:10px;font-weight:900;padding:2px 6px;vertical-align:middle;margin-left:5px}
-    .folder.has-new{background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.62);color:#fff4c2}
-    .folder.has-new small{color:#fcd34d;font-weight:800}
-    .vault-status{margin:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0d192a}
-    .vault-status-label{font-size:11px;color:var(--muted);margin-bottom:5px}.vault-status-name{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:10px}
-    .vault-status-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:7px}.vault-status-row b{color:#c9d7e8;font-weight:700;text-align:right}
-    .vault-status-row b.unsaved{color:var(--yellow)}.vault-status-row b.saved{color:#86efac}
-    .list-panel{display:flex;flex-direction:column}.toolbar{padding:12px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
-    .status{font-size:12px;color:var(--muted);margin-left:auto}.items{overflow:auto;padding:10px}
-    .item{border:1px solid transparent;border-radius:12px;padding:13px;margin-bottom:8px;background:#111f33;display:flex;gap:12px;align-items:center}
-    .item:hover,.item.active{border-color:#36506e;background:#162741}
-    .item.is-new-unsaved{border-color:rgba(251,191,36,.72);background:rgba(251,191,36,.12);box-shadow:inset 4px 0 0 #fbbf24}
-    .item.is-new-unsaved .icon{background:rgba(251,191,36,.22);color:#fde68a}
-    .item .icon{width:38px;height:38px;border-radius:10px;background:#20334f;
-      display:grid;place-items:center;font-weight:800}.item-main{min-width:0;flex:1}.item-title{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .item-sub{font-size:12px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    mark{background:rgba(251,191,36,.28);color:#fff3c4;padding:0 .12em;border-radius:4px}
-    .complete-btn{color:#2d2300;background:var(--yellow);border-color:var(--yellow);font-weight:900}
-    .complete-btn:hover{background:#f59e0b;border-color:#f59e0b}
-    .draft-note{margin:0 0 18px;padding:12px 14px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.48);color:#fde68a;font-size:13px;line-height:1.55}
-    .draft-actions{display:flex;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
-    .draft-complete{flex:1;height:48px;border:1px solid var(--yellow);border-radius:12px;background:var(--yellow);color:#2d2300;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
-    .draft-complete:hover{background:#f59e0b;border-color:#f59e0b}
-    .draft-cancel{height:48px;padding:0 18px;border:1px solid var(--line);border-radius:12px;background:#13223a;color:var(--text);font-weight:700}
-    .draft-cancel:hover{background:#1b2d47}
-    .detail{display:flex;flex-direction:column}.detail-body{padding:18px;overflow:auto}.detail-empty{height:100%;display:grid;place-items:center;color:var(--muted);text-align:center;padding:30px}
-    .detail-title-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px}.detail-title{font-size:22px;font-weight:800;flex:1}
-    .field{margin-bottom:14px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}
-    .value-row{display:flex;gap:8px}.value,.edit-input,.edit-textarea,.edit-select{width:100%;min-height:44px;border-radius:10px;border:1px solid var(--line);
-      background:#0d192a;color:var(--text);padding:11px 12px;overflow-wrap:anywhere}
-    .value.mono,.edit-input.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.edit-textarea{min-height:100px;resize:vertical}
-    .icon-btn{width:42px;min-width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:#13223a;color:var(--text)}
-    .meta{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.7}
-    .notice{margin:14px;padding:12px 14px;border:1px solid #315272;background:#10243a;border-radius:12px;color:#c9d7e8;font-size:13px}
-    .login{min-height:100vh;display:grid;place-items:center;padding:24px}
-    .login-card{width:min(460px,100%);background:rgba(16,27,45,.95);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
-    .login-brand{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.login h1{margin:0}.login-version{color:var(--green);font-size:18px;font-weight:850}
-    .login p{color:var(--muted);line-height:1.6}.login-actions{display:grid;gap:10px;margin-top:20px}
-    .release-note{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted)}
-    .release-note summary{cursor:pointer;font-size:13px;font-weight:750;color:#c8d6e8}
-    .release-content{display:grid;gap:7px;margin-top:12px;font-size:12px}.release-content b{color:var(--text)}
-    .file-label{display:flex;align-items:center;justify-content:center;height:46px;border:1px dashed #3b5573;border-radius:12px;background:#102039;cursor:pointer}
-    .file-label:hover{border-color:var(--green)}.file-label input{display:none}
-    .pass-row{display:flex;gap:8px;margin-top:12px}.pass-row input{flex:1;height:44px;border:1px solid var(--line);border-radius:10px;background:#0b1727;color:var(--text);padding:0 12px}
-    .small{font-size:12px;color:var(--muted)}.danger-text{color:#fecdd3}.good-text{color:#86efac}
-    .floating-toast{position:fixed;left:50%;bottom:88px;transform:translate(-50%,18px);opacity:0;pointer-events:none;
-      background:#f4f7fb;color:#08111f;padding:10px 18px;border-radius:999px;font-weight:750;z-index:200;
-      box-shadow:0 12px 30px rgba(0,0,0,.38);transition:.22s ease;white-space:nowrap}
-    .floating-toast.show{opacity:1;transform:translate(-50%,0)}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:grid;place-items:center;padding:20px;z-index:100}
-    .modal-card{width:min(520px,100%);max-height:90vh;overflow:auto;background:#101b2d;border:1px solid var(--line);border-radius:18px;padding:22px}
-    .modal-card h2{margin-top:0}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-    .report{background:#0d192a;border:1px solid var(--line);border-radius:12px;padding:12px;line-height:1.8}
-    .mobile-tabbar{display:none}
-    @media(max-width:900px){
-      .topbar{height:auto;flex-wrap:wrap;padding:14px}.brand{width:100%;font-size:24px}.search-wrap{order:3;max-width:none;width:100%}.top-actions{position:absolute;right:12px;top:14px}
-      .search{height:56px;border-radius:16px;padding:0 62px 0 48px;font-size:22px}
-      .search-icon{left:16px;top:17px;font-size:22px}
-      .search-back{display:flex;right:7px;top:7px;width:46px;height:42px}
-      .layout{grid-template-columns:1fr;padding:10px;padding-bottom:82px}.sidebar,.detail{display:none}.layout.show-folders .sidebar{display:flex}.layout.show-detail .list-panel{display:none}.layout.show-detail .detail{display:flex}
-      .panel{border-radius:14px}.toolbar .desktop-only,.desktop-only{display:none!important}
-      .toolbar{padding:14px}.btn{height:44px;font-size:16px}.status{font-size:15px}
-      .items{padding:12px}.item{padding:16px 14px;margin-bottom:10px;border-radius:14px}.item .icon{width:44px;height:44px;font-size:19px}
-      .item-title{font-size:24px}.item-sub{font-size:17px;line-height:1.35;margin-top:6px}.folder{padding:14px 12px;font-size:18px}.panel-head{font-size:18px}
-      .detail-title{font-size:28px}.field label{font-size:14px}.value,.edit-input,.edit-textarea,.edit-select{font-size:20px;min-height:52px}
-      .meta{font-size:14px}.notice{margin:10px;font-size:15px}
-      .mobile-tabbar{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;bottom:0;left:0;right:0;height:72px;background:#091525;border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
-      .mobile-tabbar button{border:none;background:transparent;color:var(--muted);font-size:14px}.mobile-tabbar button.active{color:var(--green)}
-      .detail-body{padding:16px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#091426">
+<title>PassVault</title>
+<style>
+:root{--bg:#091426;--panel:rgba(27,42,65,.82);--card:rgba(48,66,89,.6);--inset:#101c30;--border:rgba(177,199,229,.15);--ink:#f1f7ff;--muted:#9db0c9;--mint:#39d6a1;--amber:#fbbf24;--bad:#fb7185;--shadow:0 12px 28px rgba(0,0,0,.29);--blue:#60a5fa}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:linear-gradient(145deg,#0b1525,#17273b);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:2px}.hidden{display:none!important}.small{font-size:12px;color:var(--muted);line-height:1.6}.bad{color:#fda4af}.good{color:#86efac}
+.btn{background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:10px 13px;min-height:40px;white-space:nowrap}.btn:hover{background:rgba(255,255,255,.13)}.btn.primary{background:var(--mint);color:#034a36;border-color:var(--mint);font-weight:800}.btn.primary:hover{background:#20bb88}.btn.warn{border-color:rgba(251,191,36,.55);color:#ffe8a0}.btn.danger{color:#fecaca;border-color:rgba(251,113,133,.3)}.icon-btn{height:34px;min-width:34px;display:inline-grid;place-items:center;padding:3px;border:0;border-radius:8px;background:transparent;color:var(--muted)}.icon-btn:hover{background:rgba(255,255,255,.1);color:var(--ink)}.icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#login{min-height:100vh;display:grid;place-items:center;padding:24px}#loginCard{width:min(470px,100%);padding:28px;border:1px solid var(--border);border-radius:22px;background:#101e31;box-shadow:var(--shadow)}.login-brand{font-size:28px;font-weight:800;display:flex;align-items:baseline;gap:12px}.brand-version{font-size:15px;color:var(--mint);font-weight:750}#loginCard p{color:var(--muted);line-height:1.65}.entry-actions{display:grid;gap:10px;margin:22px 0}.upload-label{display:flex;align-items:center;justify-content:center;min-height:46px;padding:10px;border:1px dashed #52647c;border-radius:12px;background:#16253b;cursor:pointer}.upload-label:hover{border-color:var(--mint)}.upload-label input{display:none}.passline{display:flex;gap:8px}.passline input{background:#0a1423;border:1px solid var(--border);color:var(--ink);border-radius:10px;padding:11px;min-width:0;flex:1}.release-note{border-top:1px solid var(--border);margin-top:20px;padding-top:14px}.release-note summary{font-size:13px;color:var(--muted);cursor:pointer}.release-note p{font-size:12px}
+#app{min-height:100vh;display:flex;flex-direction:column}.header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;background:rgba(9,20,38,.95);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;backdrop-filter:blur(16px)}.brand{font-size:22px;font-weight:800;white-space:nowrap;display:flex;align-items:baseline;gap:9px}.mode{font-size:12px;color:var(--muted);font-weight:500}.search-wrap{position:relative;flex:1;min-width:220px;max-width:430px}.search-wrap input{width:100%;height:42px;padding:0 46px 0 40px;background:#112038;border:1px solid rgba(57,214,161,.5);color:var(--ink);border-radius:12px;font-size:15px}.search-glyph{position:absolute;left:13px;top:11px;color:var(--mint)}.back-btn{display:none;position:absolute;right:6px;top:5px;width:33px;height:33px;border:1px solid var(--border);border-radius:9px;background:#1b3049;color:var(--ink);padding:6px}.back-btn svg{width:100%;height:100%;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}.actions{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap}.actions .btn{font-size:13px}
+.workspace{display:flex;gap:20px;padding:20px;flex:1;min-height:0}.uncat{width:255px;flex-shrink:0;background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;max-height:calc(100vh - 128px)}.uncat-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:17px;font-weight:750}.folder-count{font-size:12px;border-radius:20px;background:rgba(0,0,0,.24);color:var(--muted);padding:4px 9px}.uncat-items{flex:1;overflow:auto;padding:12px;min-height:90px}.vault-info{border-top:1px solid var(--border);font-size:11px;color:var(--muted);padding:13px;line-height:1.7}.vault-info strong{color:var(--ink)}.vault-info .warning{color:var(--amber)}.board-area{flex:1;min-width:0;overflow:auto;max-height:calc(100vh - 128px)}.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:19px;align-items:start;padding-bottom:25px}.board.focused{display:block;max-width:940px;margin:auto}.focus-back{margin:0 0 16px}.column{background:var(--panel);border:1px solid var(--border);border-top:4px solid var(--folder-color,var(--blue));border-radius:16px;box-shadow:var(--shadow);min-height:120px;max-height:calc(100vh - 165px);display:flex;flex-direction:column;overflow:hidden}.column:hover{border-color:rgba(255,255,255,.25)}.column-head{display:flex;align-items:center;gap:9px;padding:12px 13px;border-bottom:1px solid var(--border)}.folder-color{height:14px;width:14px;min-width:14px;border-radius:50%;border:none;background:var(--folder-color,var(--blue));box-shadow:0 0 8px var(--folder-color,var(--blue));padding:0}.folder-title{min-width:30px;width:100%;background:none;color:var(--ink);font-weight:750;border:none;outline:none}.column-label{flex:1;min-width:0;display:flex;align-items:center;gap:7px}.column-label input{min-width:0}.column-cards{display:flex;flex-direction:column;gap:12px;padding:12px;overflow:auto;min-height:60px}.column.collapsed .column-cards{display:none}.column.focus-col{max-height:none}.column.focus-col .column-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}.column.pending,.uncat.pending{border-color:rgba(251,191,36,.8)}.pill-new{display:inline-block;font-size:10px;border-radius:7px;padding:2px 6px;color:#352600;background:var(--amber);font-weight:850}
+.entry-card{border:1px solid var(--border);border-radius:12px;background:var(--card);padding:13px;box-shadow:0 4px 12px rgba(0,0,0,.19);cursor:grab}.entry-card:focus-within{border-color:rgba(57,214,161,.6)}.entry-card.pending{background:rgba(251,191,36,.11);border-color:rgba(251,191,36,.75)}.entry-head{display:flex;align-items:center;gap:4px;margin-bottom:11px}.entry-title{flex:1;min-width:0;color:var(--ink);background:transparent;border:0;font-weight:750;font-size:16px}.entry-title:focus{outline:none;border-bottom:1px solid var(--mint)}.entry-row{display:flex;align-items:center;gap:5px;margin-top:8px;min-height:39px;border-radius:8px;padding:4px 7px;background:rgba(1,8,18,.27)}.entry-row label{font-size:12px;color:var(--muted);min-width:35px}.entry-row input,.entry-row select,.entry-row textarea{color:var(--ink);background:transparent;border:0;outline:none;min-width:0;width:100%;flex:1;font-size:13px}.entry-row input[type=password],.entry-row input[data-field=password]{font-family:ui-monospace,Consolas,monospace}.entry-row textarea{resize:vertical;min-height:29px;line-height:1.55}.entry-row select option{background:#142238}.entry-row.notes{align-items:flex-start}.entry-row.notes label{padding-top:7px}.empty-col{font-size:12px;color:var(--muted);padding:18px 8px;text-align:center;border:1px dashed var(--border);border-radius:9px}.dragging{opacity:.5}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50;display:grid;place-items:center;padding:16px}.modal-card{width:min(530px,100%);max-height:90vh;overflow:auto;background:#132139;border:1px solid var(--border);border-radius:18px;padding:23px;box-shadow:var(--shadow)}.modal-card h2{margin:0 0 12px}.modal-card .form-row{margin-top:14px}.modal-card label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}.modal-card input,.modal-card select,.modal-card textarea{width:100%;color:var(--ink);background:#0a1728;border:1px solid var(--border);border-radius:10px;padding:10px;min-height:40px}.modal-card textarea{min-height:90px;resize:vertical}.modal-card .form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.draft-note{font-size:13px;color:#ffe4a3;background:rgba(251,191,36,.12);padding:12px;border:1px solid rgba(251,191,36,.45);border-radius:9px}.confirm-complete{background:var(--amber);color:#302204;border:1px solid var(--amber);font-weight:850}.confirm-complete:hover{background:#e5a91a}.float-toast{position:fixed;bottom:90px;left:50%;transform:translate(-50%,16px);z-index:90;opacity:0;pointer-events:none;background:#f6f8fb;color:#081426;border-radius:32px;padding:10px 17px;box-shadow:var(--shadow);transition:all .2s}.float-toast.show{opacity:1;transform:translate(-50%,0)}
+.mobile-tabs{display:none}.mobile-page{display:none}.mobile-folders{display:none}.mobile-list{display:none}.mobile-detail{display:none}.mfolder{width:100%;padding:15px 13px;margin-bottom:7px;border:0;border-radius:10px;text-align:left;background:#142339;color:var(--ink);font-size:18px;display:flex;justify-content:space-between;align-items:center}.mfolder small{color:var(--muted)}.mfolder:hover{background:#1c2e48}.mitem{width:100%;display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:13px;background:#14243b;padding:15px;margin-bottom:10px;color:var(--ink);text-align:left}.micon{width:43px;height:43px;flex-shrink:0;border-radius:10px;background:#203653;display:grid;place-items:center;font-size:18px;font-weight:750}.mitem-main{flex:1;min-width:0}.mitem-title{font-weight:800;font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mitem-sub{font-size:16px;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}mark{background:rgba(251,191,36,.32);color:#ffedc0;border-radius:3px}.mobile-detail h2{font-size:27px}.mobile-field{margin-bottom:16px}.mobile-field label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}.mobile-val-row{display:flex;gap:7px;align-items:stretch}.mobile-val{flex:1;min-width:0;background:#0d1c30;border:1px solid var(--border);padding:13px;border-radius:10px;font-size:19px;overflow-wrap:anywhere}.mobile-val.password{font-family:ui-monospace,Consolas,monospace}.mobile-action{width:46px;min-width:46px;border:1px solid var(--border);border-radius:10px;background:#203452;color:var(--ink);font-size:20px}.search-back{display:none}
+body.mobile-mode .header{padding:13px 14px;gap:11px}body.mobile-mode .brand{font-size:23px;width:100%}body.mobile-mode .actions{position:absolute;right:13px;top:11px}body.mobile-mode .actions .desktop-only{display:none!important}body.mobile-mode .actions #lockBtn{font-size:14px;min-height:39px;padding:7px 12px}body.mobile-mode .search-wrap{order:4;min-width:100%;max-width:none}body.mobile-mode .search-wrap input{height:57px;font-size:21px;padding:0 61px 0 46px}body.mobile-mode .search-glyph{font-size:21px;top:16px;left:15px}body.mobile-mode .back-btn{display:grid;place-items:center;right:8px;top:7px;width:43px;height:43px}body.mobile-mode .workspace{display:none}body.mobile-mode .mobile-page{display:flex;flex-direction:column;flex:1;padding:12px 12px 90px}body.mobile-mode .mobile-folders,body.mobile-mode .mobile-list,body.mobile-mode .mobile-detail{display:none}body.mobile-mode .mobile-page.view-folders .mobile-folders,body.mobile-mode .mobile-page.view-list .mobile-list,body.mobile-mode .mobile-page.view-detail .mobile-detail{display:block}body.mobile-mode .mobile-tabs{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(3,1fr);height:72px;padding-bottom:env(safe-area-inset-bottom);background:#0a1728;border-top:1px solid var(--border);z-index:30}body.mobile-mode .mobile-tabs button{background:transparent;border:0;color:var(--muted);font-size:14px}body.mobile-mode .mobile-tabs button.active{color:var(--mint)}body.mobile-mode .mstatus{display:block;text-align:right;color:var(--muted);font-size:14px;margin:4px 5px 12px}
+</style>
 </head>
 <body>
-<div id="login" class="login">
-  <div class="login-card">
-    <div class="login-brand"><h1>PassVault</h1><span class="login-version" id="loginVersion"></span></div>
-    <p>電腦可編輯、手機唯讀。密碼庫以 AES-GCM 加密後存放在你的 iCloud Drive；GitHub Pages 只放程式，不放密碼。</p>
-    <div class="login-actions">
-      <label class="file-label">開啟加密密碼庫（.pvault）
-        <input id="vaultFile" type="file" accept=".pvault,application/json">
-      </label>
-      <label class="file-label">匯入 .HTML
-        <input id="legacyFile" type="file" accept=".html,text/html">
-      </label>
-      <button id="newVaultBtn" class="btn ghost">建立新的空白密碼庫</button>
-    </div>
-    <div id="unlockBox" class="hidden">
-      <div class="pass-row">
-        <input id="masterPassword" type="password" placeholder="輸入主密碼">
-        <button id="unlockBtn" class="btn primary">解鎖</button>
-      </div>
-      <p id="loginMsg" class="small"></p>
-    </div>
-    <p class="small">提醒：主密碼不會儲存在檔案中，忘記後無法復原。</p>
-    <details class="release-note">
-      <summary>版本資訊</summary>
-      <div class="release-content">
-        <b>PassVault 2.0</b>
-        <span>✓ 電腦草稿與完成新增流程</span>
-        <span>✓ 手機唯讀與跨分類搜尋</span>
-        <span>✓ 黃色未備份提示</span>
-        <span>✓ AES-GCM 加密 .pvault</span>
-        <span>✓ 舊版 HTML 匯入檢查</span>
-      </div>
-    </details>
+<section id="login">
+ <div id="loginCard">
+  <div class="login-brand">PassVault <span class="brand-version" id="loginVersion"></span></div>
+  <p>電腦看板管理、手機唯讀搜尋。GitHub 只儲存程式；密碼庫由你手動選擇，於瀏覽器內解密。</p>
+  <div class="entry-actions">
+   <label class="upload-label">開啟加密密碼庫（.pvault）<input id="vaultInput" type="file" accept=".pvault,application/json"></label>
+   <label class="upload-label">匯入 .HTML（舊版／加密備份）<input id="htmlInput" type="file" accept=".html,text/html"></label>
+   <button id="newVault" class="btn">建立空白密碼庫</button>
   </div>
-</div>
-
-<div id="app" class="app hidden">
-  <header class="topbar">
-    <div class="brand"><span>PassVault</span><small class="brand-version" id="appVersion"></small><small class="version" id="modeLabel"></small></div>
-    <div class="search-wrap">
-      <span class="search-icon">⌕</span>
-      <input id="searchInput" class="search" placeholder="搜尋標題、帳號、備註">
-      <button id="backToFoldersBtn" class="search-back" type="button" aria-label="返回上一層" title="返回上一層">
-        <svg class="return-arrow-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M15 5 8 12l7 7"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="top-actions">
-      <button id="addBtn" class="btn primary desktop-only">＋ 新增</button>
-      <button id="saveBtn" class="btn desktop-only">匯出備份</button>
-      <button id="lockBtn" class="btn ghost">鎖定</button>
-    </div>
-  </header>
-
-  <main id="layout" class="layout">
-    <aside class="panel sidebar">
-      <div class="panel-head">分類</div>
-      <div id="folders" class="folders"></div>
-      <div class="vault-status desktop-only">
-        <div class="vault-status-label">目前密碼庫</div>
-        <div class="vault-status-name" id="vaultFileName">尚未命名</div>
-        <div class="vault-status-row"><span>最後更新</span><b id="vaultUpdatedAt">—</b></div>
-        <div class="vault-status-row"><span>備份狀態</span><b id="backupState">—</b></div>
-      </div>
-    </aside>
-
-    <section class="panel list-panel">
-      <div class="toolbar">
-        <button id="allFilter" class="btn">全部</button>
-        <span id="countStatus" class="status"></span>
-      </div>
-      <div id="items" class="items"></div>
-    </section>
-
-    <section class="panel detail">
-      <div id="detailBody" class="detail-body">
-        <div class="detail-empty">選擇一筆帳號<br>即可查看詳細內容</div>
-      </div>
-    </section>
-  </main>
-
-  <nav class="mobile-tabbar">
-    <button data-tab="folders">分類</button>
-    <button data-tab="list" class="active">帳號</button>
-    <button data-tab="detail">詳細</button>
-  </nav>
-</div>
-
-<div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
-
+  <div id="unlockArea" class="hidden">
+   <div class="passline"><input type="password" id="masterInput" placeholder="請輸入主密碼" autocomplete="off"><button id="unlockBtn" class="btn primary">解鎖</button></div>
+  </div>
+  <p id="loginStatus" class="small" aria-live="polite"></p>
+  <p class="small">主密碼無法從備份檔案找回；請妥善保存。</p>
+  <details class="release-note"><summary>版本資訊</summary><p>PC 恢復 v7.1 看板與資料夾管理；手機沿用 v2.0 唯讀介面；可匯出加密 .pvault 與加密單檔 HTML。</p></details>
+ </div>
+</section>
+<section id="app" class="hidden">
+ <header class="header">
+  <div class="brand">PassVault <span class="brand-version" id="appVersion"></span><span class="mode" id="modeLabel"></span></div>
+  <div class="search-wrap"><span class="search-glyph">⌕</span><input id="search" type="search" placeholder="搜尋標題、帳號、備註"><button id="backBtn" class="back-btn" aria-label="返回分類" title="返回分類"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button></div>
+  <div class="actions">
+   <button id="addItem" class="btn desktop-only">＋ 新增帳密</button>
+   <button id="addFolder" class="btn desktop-only">＋ 新資料夾</button>
+   <label class="btn desktop-only" style="cursor:pointer">匯入 TXT<input id="txtInput" type="file" accept=".txt" multiple hidden></label>
+   <label class="btn desktop-only" style="cursor:pointer">讀取 HTML<input id="htmlInputPC" type="file" accept=".html,text/html" hidden></label>
+   <button id="csvBtn" class="btn desktop-only">Excel (CSV)</button>
+   <button id="htmlExportBtn" class="btn desktop-only">加密 HTML</button>
+   <button id="exportBtn" class="btn primary desktop-only">匯出 .pvault</button>
+   <button id="lockBtn" class="btn">鎖定</button>
+  </div>
+ </header>
+ <main class="workspace">
+  <aside id="uncatColumn" class="uncat" data-folder-id="uncategorized"><div class="uncat-head"><span>未分類 <span id="uncatPending"></span></span><span id="uncatCount" class="folder-count">0</span></div><div id="uncatItems" class="uncat-items"></div><div class="vault-info"><div><strong id="vaultName">未命名</strong></div><div>最後更新：<span id="lastModified">—</span></div><div>狀態：<strong id="saveState">—</strong></div></div></aside>
+  <div class="board-area"><div id="desktopBoard" class="board"></div></div>
+ </main>
+ <main id="mobilePage" class="mobile-page view-folders"><section class="mobile-folders"><div class="uncat-head" style="border:0">分類</div><div id="mobileFolders"></div></section><section class="mobile-list"><div id="mobileCount" class="mstatus"></div><div id="mobileItems"></div></section><section class="mobile-detail" id="mobileDetail"></section></main>
+ <nav class="mobile-tabs"><button data-tab="folders" class="active">分類</button><button data-tab="list">帳號</button><button data-tab="detail">詳細</button></nav>
+</section>
+<div id="modal" class="modal hidden"><div id="modalBody" class="modal-card"></div></div>
+<div id="toast" class="float-toast" role="status" aria-live="polite"></div>
+<!-- This slot contains only AES-GCM ciphertext, never plaintext passwords. -->
+<script id="embedded-vault" type="application/json"></script>
 <script>
-const APP_VERSION="2.0", SCHEMA_VERSION=1, MOBILE_BREAKPOINT=900;
-const encoder=new TextEncoder(), decoder=new TextDecoder();
-let vault=null, selectedId=null, currentFolder="all", dirty=false, unlockPayload=null, masterKeyPassword="", currentVaultName="尚未命名";
-let readonlyMode=window.matchMedia(`(max-width:${MOBILE_BREAKPOINT}px)`).matches;
-
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const nowIso=()=>new Date().toISOString();
-const uid=()=>crypto.randomUUID?crypto.randomUUID():"id-"+Date.now()+"-"+Math.random().toString(16).slice(2);
-const escapeHTML=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const iconText=t=>(t||"?").trim().slice(0,1).toUpperCase();
-function highlightMatch(text,q){
-  const base=String(text??"");
-  if(!q) return escapeHTML(base||"未命名");
-  const safe=escapeHTML(base);
-  const escapedQ=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return safe.replace(new RegExp(escapedQ,'gi'),m=>`<mark>${m}</mark>`);
+'use strict';
+const APP_VERSION='2.1', SCHEMA_VERSION=1, MOBILE_BREAKPOINT=900;
+const encoder=new TextEncoder(),decoder=new TextDecoder();
+const $=id=>document.getElementById(id), esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Capture pristine markup before password data can ever populate the DOM.
+// Never use the live unlocked DOM as an HTML backup source.
+const CLEAN_SOURCE='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+const IS_MOBILE_DEVICE=/iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent+' '+navigator.platform)||(/Mac/.test(navigator.platform+' '+navigator.userAgent)&&navigator.maxTouchPoints>1);
+let vault=null, selectedId=null, currentFolder='all', focusedFolder=null, dirty=false, postExport=false, masterPassword='', selectedFilename='尚未命名', incoming=null, drag=null;
+let readonlyMode=IS_MOBILE_DEVICE;
+let currentTab='folders', hiddenAt=null, revealTimer=null, draft=null, changedSinceOpen=false;
+let sessionEpoch=0,exportBusy=false,pendingSave=null,masterPromptResolve=null,backgroundTimer=null,exportSequence=0;
+const COLORS=['#60a5fa','#a78bfa','#f472b6','#fbbf24','#34d399','#2dd4bf','#fde047','#94a3b8'];
+function stamp(){return new Date().toISOString()}
+function uid(){return typeof crypto.randomUUID==='function'?crypto.randomUUID():'id-'+Date.now()+'-'+Math.random().toString(36).slice(2)}
+function fileStamp(){const d=new Date();const two=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${two(d.getMonth()+1)}${two(d.getDate())}_${two(d.getHours())}${two(d.getMinutes())}${two(d.getSeconds())}_${String(d.getMilliseconds()).padStart(3,'0')}_${++exportSequence}_${uid().slice(-8)}`}
+function b64(bytes){let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s)}
+function unb64(s){if(typeof s!=='string'||!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(s))throw Error('Base64 格式不正確');return Uint8Array.from(atob(s),x=>x.charCodeAt(0))}
+function statusText(msg,bad=false){$('loginStatus').textContent=msg;$('loginStatus').className='small '+(bad?'bad':'good')}
+function notify(s){let t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(t._hide);t._hide=setTimeout(()=>t.classList.remove('show'),2300)}
+function setVersion(){document.title='PassVault v'+APP_VERSION;$('loginVersion').textContent='v'+APP_VERSION;$('appVersion').textContent='v'+APP_VERSION}
+function modeMobile(){return readonlyMode}
+function emptyVault(){return{schemaVersion:SCHEMA_VERSION,appVersion:APP_VERSION,createdAt:stamp(),updatedAt:stamp(),folders:[{id:'personal',name:'個人帳號',color:COLORS[1]},{id:'web',name:'網站帳號',color:COLORS[0]}],items:[]}}
+function ensureUncat(f){if(!f.some(x=>x.id==='uncategorized'))f.unshift({id:'uncategorized',name:'未分類',color:COLORS[7]})}
+function isRecord(value){return value!==null&&typeof value==='object'&&!Array.isArray(value)}
+function textField(value,key,fallback=''){if(value[key]===undefined||value[key]===null)return fallback;if(typeof value[key]!=='string')throw Error('密碼庫文字欄位型別不正確');return value[key]}
+function normalize(data){
+ if(!isRecord(data)||data.schemaVersion!==SCHEMA_VERSION||!Array.isArray(data.items)||!Array.isArray(data.folders))throw Error('密碼庫資料格式或版本不正確');
+ const copy=structuredClone(data);copy.schemaVersion=SCHEMA_VERSION;copy.appVersion=APP_VERSION;copy.createdAt=textField(copy,'createdAt',stamp());copy.updatedAt=textField(copy,'updatedAt',stamp());
+ const folderSeen=new Set();copy.folders=copy.folders.map((f,index)=>{if(!isRecord(f))throw Error('分類格式不正確');const id=textField(f,'id')||uid();if(id==='all'||folderSeen.has(id))throw Error('分類 ID 重複或無效');folderSeen.add(id);return {...f,id,name:textField(f,'name','未命名'),color:COLORS.includes(f.color)?f.color:COLORS[index%COLORS.length],collapsed:!!f.collapsed}});ensureUncat(copy.folders);
+ const folderIds=new Set(copy.folders.map(f=>f.id));const seen=new Set();
+ copy.items=copy.items.map((x,index)=>{
+   if(!isRecord(x))throw Error('帳密格式不正確');const id=textField(x,'id')||uid();if(seen.has(id))throw Error('密碼庫存在重複帳密 ID');seen.add(id);
+   const folderId=textField(x,'folderId')||'uncategorized';if(!folderIds.has(folderId)||x.isDraft===true)throw Error('帳密分類不存在或包含未完成草稿');
+   return {...x,id,title:textField(x,'title'),account:textField(x,'account'),password:textField(x,'password'),notes:textField(x,'notes'),folderId,isDraft:false,pendingBackup:false,createdAt:textField(x,'createdAt',stamp()),updatedAt:textField(x,'updatedAt',stamp())};
+ });return copy;
 }
-function folderNameById(id){return vault?.folders?.find(f=>f.id===id)?.name||""}
-
-function applyVersion(){
-  document.title=`PassVault ${APP_VERSION}`;
-  const loginVersion=$("#loginVersion"),appVersion=$("#appVersion");
-  if(loginVersion)loginVersion.textContent=`v${APP_VERSION}`;
-  if(appVersion)appVersion.textContent=`v${APP_VERSION}`;
+function migrateV7(data){
+ if(!isRecord(data)||!isRecord(data.columns)||!isRecord(data.tasks)||(data.columnOrder!==undefined&&!Array.isArray(data.columnOrder)))throw Error('不是支援的 v7.x HTML 資料');
+ const folders=[],items=[],found=new Set(),ids=[...new Set(['col-uncategorized',...(data.columnOrder||[]),...Object.keys(data.columns)])];
+ const convert=(t,tid,folderId)=>{if(!isRecord(t))throw Error('舊帳密格式不正確');return {...t,id:textField(t,'id')||tid,title:textField(t,'title'),account:textField(t,'account'),password:textField(t,'password'),notes:textField(t,'notes'),folderId,createdAt:textField(t,'createdAt',stamp()),updatedAt:textField(t,'updatedAt',stamp())}};
+ for(const id of ids){if(typeof id!=='string')throw Error('分類順序格式不正確');const col=data.columns[id];if(col===undefined&&id==='col-uncategorized')continue;if(!isRecord(col)||(col.taskIds!==undefined&&!Array.isArray(col.taskIds)))throw Error('舊分類格式不正確');const newId=id==='col-uncategorized'?'uncategorized':id;
+   folders.push({id:newId,name:textField(col,'title','未命名'),color:COLORS[folders.length%COLORS.length]});
+   for(const tid of col.taskIds||[]){if(typeof tid!=='string'||!Object.hasOwn(data.tasks,tid)||found.has(tid))throw Error('舊帳密索引遺失或重複');found.add(tid);items.push(convert(data.tasks[tid],tid,newId))}
+ }
+ for(const [tid,t] of Object.entries(data.tasks)){if(found.has(tid))continue;items.push(convert(t,tid,'uncategorized'))}
+ return normalize({schemaVersion:1,appVersion:APP_VERSION,createdAt:stamp(),updatedAt:stamp(),folders,items});
 }
-applyVersion();
-
-function emptyVault(){
-  return {schemaVersion:SCHEMA_VERSION,appVersion:APP_VERSION,createdAt:nowIso(),updatedAt:nowIso(),
-    folders:[{id:"personal",name:"個人帳號"},{id:"work",name:"工作帳號"},{id:"finance",name:"金融服務"}],items:[]};
-}
-function setMsg(msg,type=""){
-  const el=$("#loginMsg"); el.textContent=msg; el.className="small "+(type==="bad"?"danger-text":type==="good"?"good-text":"");
-}
-function bytesToB64(bytes){let s="";bytes.forEach(b=>s+=String.fromCharCode(b));return btoa(s)}
-function b64ToBytes(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}
-async function deriveKey(password,salt,iterations=250000){
-  const base=await crypto.subtle.importKey("raw",encoder.encode(password),"PBKDF2",false,["deriveKey"]);
-  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
-}
-async function encryptVault(data,password){
-  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
-  const iterations=250000,key=await deriveKey(password,salt,iterations);
-  const plain=encoder.encode(JSON.stringify(data));
-  const cipher=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},key,plain));
-  return {format:"passvault",schemaVersion:1,appVersion:APP_VERSION,kdf:"PBKDF2-SHA256",iterations,
-    cipher:"AES-GCM",salt:bytesToB64(salt),iv:bytesToB64(iv),data:bytesToB64(cipher)};
-}
-async function decryptVault(payload,password){
-  const key=await deriveKey(password,b64ToBytes(payload.salt),payload.iterations||250000);
-  const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64ToBytes(payload.iv)},key,b64ToBytes(payload.data));
-  return JSON.parse(decoder.decode(plain));
-}
-function normalizeVault(v){
-  if(!v||typeof v!=="object")throw new Error("資料格式錯誤");
-  v.schemaVersion=SCHEMA_VERSION;v.appVersion=APP_VERSION;
-  v.folders=Array.isArray(v.folders)?v.folders:[];
-  v.items=Array.isArray(v.items)?v.items:[];
-  v.items=v.items.map(x=>({id:x.id||uid(),title:x.title||"",account:x.account||"",password:x.password||"",
-    notes:x.notes||"",folderId:x.folderId||"",isDraft:false,pendingBackup:false,createdAt:x.createdAt||nowIso(),updatedAt:x.updatedAt||nowIso()}));
-  return v;
-}
-function convertLegacy(appData){
-  const folders=[],items=[],seen=new Set(),columnMap={};
-  const order=["col-uncategorized",...(appData.columnOrder||[])];
-  order.forEach(cid=>{
-    const c=appData.columns?.[cid];if(!c)return;
-    const fid=cid==="col-uncategorized"?"uncategorized":cid;
-    columnMap[cid]=fid;folders.push({id:fid,name:c.title||"未命名分類"});
-    (c.taskIds||[]).forEach(tid=>{
-      const t=appData.tasks?.[tid];if(!t||seen.has(tid))return;seen.add(tid);
-      items.push({id:t.id||uid(),title:t.title||"",account:t.account||"",password:t.password||"",url:"",
-        notes:t.notes||"",folderId:fid,createdAt:nowIso(),updatedAt:nowIso()});
-    });
-  });
-  Object.values(appData.tasks||{}).forEach(t=>{
-    if(seen.has(t.id))return;
-    items.push({id:t.id||uid(),title:t.title||"",account:t.account||"",password:t.password||"",url:"",
-      notes:t.notes||"",folderId:"uncategorized",createdAt:nowIso(),updatedAt:nowIso()});
-  });
-  if(!folders.some(f=>f.id==="uncategorized"))folders.unshift({id:"uncategorized",name:"未分類"});
-  return {schemaVersion:1,appVersion:APP_VERSION,createdAt:nowIso(),updatedAt:nowIso(),folders,items};
-}
+async function keyFor(password,salt,iterations=250000){const keyMaterial=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations,hash:'SHA-256'},keyMaterial,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function encrypt(data,password){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iterations=250000,key=await keyFor(password,salt,iterations);const encrypted=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,encoder.encode(JSON.stringify(data))));return{format:'passvault',schemaVersion:1,appVersion:APP_VERSION,kdf:'PBKDF2-SHA256',iterations,cipher:'AES-GCM',salt:b64(salt),iv:b64(iv),data:b64(encrypted)}}
+function validatePayload(payload){if(!isRecord(payload)||payload.format!=='passvault'||payload.schemaVersion!==SCHEMA_VERSION||payload.cipher!=='AES-GCM'||payload.kdf!=='PBKDF2-SHA256')throw Error('不支援的加密檔案');const iterations=payload.iterations??250000;if(!Number.isSafeInteger(iterations)||iterations<1||iterations>2000000||unb64(payload.salt).length!==16||unb64(payload.iv).length!==12||unb64(payload.data).length<16)throw Error('加密參數不正確');return payload}
+async function decrypt(payload,password){validatePayload(payload);const k=await keyFor(password,unb64(payload.salt),payload.iterations??250000);const bytes=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(payload.iv)},k,unb64(payload.data));return JSON.parse(decoder.decode(bytes))}
+function lock(){if((dirty||draft)&&!confirm('尚有未匯出的變更，確定鎖定？'))return;lockForced()}
+function lockForced(){sessionEpoch++;hideReveal();clearTimeout(backgroundTimer);backgroundTimer=null;hiddenAt=null;closeModal();vault=null;incoming=null;masterPassword='';selectedId=null;draft=null;drag=null;dirty=false;postExport=false;selectedFilename='尚未命名';for(const id of ['masterInput','search','vaultInput','htmlInput','htmlInputPC','txtInput'])$(id).value='';for(const id of ['desktopBoard','uncatItems','mobileFolders','mobileItems','mobileDetail'])$(id).replaceChildren();$('unlockArea').classList.add('hidden');$('app').classList.add('hidden');$('login').classList.remove('hidden');statusText('',false)}
 function showApp(){
-  $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
-  applyVersion();
-  $("#modeLabel").textContent=readonlyMode?"手機唯讀":"電腦編輯";
-  $("#addBtn").classList.toggle("hidden",readonlyMode);$("#saveBtn").classList.toggle("hidden",readonlyMode);
-  if(readonlyMode && innerWidth<=MOBILE_BREAKPOINT){
-    selectedId=null;
-    currentFolder="all";
-    $("#searchInput").value="";
-    mobileTab("folders");
-  }
-  render();
+ $('login').classList.add('hidden');$('app').classList.remove('hidden');setVersion();$('modeLabel').textContent=modeMobile()?'手機唯讀':'電腦編輯';
+ selectedId=null;currentFolder='all';focusedFolder=null;$('search').value='';currentTab='folders';renderAll();setTab('folders');
 }
-function lockApp(){
-  vault=null;selectedId=null;masterKeyPassword="";unlockPayload=null;dirty=false;currentVaultName="尚未命名";
-  $("#app").classList.add("hidden");$("#login").classList.remove("hidden");$("#unlockBox").classList.add("hidden");
-  $("#masterPassword").value="";setMsg("");
+function markChange(item,newItem=false){if(item){item.updatedAt=stamp();if(newItem)item.pendingBackup=true}vault.updatedAt=stamp();dirty=true;postExport=false;changedSinceOpen=true;renderStatus()}
+function renderStatus(){if(!vault)return;$('vaultName').textContent=selectedFilename;$('lastModified').textContent=new Date(vault.updatedAt).toLocaleString();const state=$('saveState');if(draft){state.textContent='有未完成草稿';state.className='warning'}else if(pendingSave){state.textContent='已啟動下載，尚待確認';state.className='warning'}else if(dirty){state.textContent='尚未匯出';state.className='warning'}else if(postExport){state.textContent='已確認匯出，請手動放入 iCloud';state.className='warning'}else{state.textContent='目前無未匯出修改';state.className=''} }
+function folderName(id){return vault.folders.find(f=>f.id===id)?.name||'未分類'}
+function itemsIn(id){return vault.items.filter(x=>x.folderId===id)}
+function matchesQuery(item,q){return !q||[item.title,item.account,item.notes,folderName(item.folderId)].some(v=>String(v??'').toLocaleLowerCase().includes(q))}
+function filterItems(){const q=$('search').value.trim().toLocaleLowerCase();return vault.items.filter(x=>(q||currentFolder==='all'||x.folderId===currentFolder)&&matchesQuery(x,q))}
+function highlight(value,q){let s=String(value??'');if(!q)return esc(s);const normalized=s.toLocaleLowerCase();const needle=q.toLocaleLowerCase();let out='',at=0,idx;while((idx=normalized.indexOf(needle,at))>=0){out+=esc(s.slice(at,idx))+'<mark>'+esc(s.slice(idx,idx+needle.length))+'</mark>';at=idx+needle.length}return out+esc(s.slice(at))}
+function renderAll(){if(!vault)return;renderStatus();if(modeMobile()){renderMobile()}else{renderBoard()}}
+function makeButton(text,title,action,extra=''){const b=document.createElement('button');b.type='button';b.className='icon-btn '+extra;b.title=title;b.setAttribute('aria-label',title);b.textContent=text;b.addEventListener('click',e=>{e.stopPropagation();action()});return b}
+async function copyString(value){if(!value)return;try{await navigator.clipboard.writeText(value);notify('已複製')}catch{notify('瀏覽器拒絕剪貼簿存取')}}
+function drawCard(item){
+ const card=document.createElement('article');card.className='entry-card'+(item.pendingBackup?' pending':'');card.draggable=true;card.dataset.itemId=item.id;
+ const head=document.createElement('div');head.className='entry-head';const title=document.createElement('input');title.className='entry-title';title.value=item.title;title.placeholder='標題';title.setAttribute('aria-label','標題');title.addEventListener('input',()=>{item.title=title.value;markChange(item)});head.append(title);
+ if(item.pendingBackup){const p=document.createElement('span');p.className='pill-new';p.textContent='NEW';head.append(p)}
+ head.append(makeButton('×','刪除帳密',()=>{if(confirm(`確定刪除「${item.title||'未命名'}」？`)){vault.items=vault.items.filter(x=>x.id!==item.id);markChange();renderAll()}},'danger'));
+ card.append(head);
+ function row(label,field,kind='text'){
+  const wrapper=document.createElement('div');wrapper.className='entry-row'+(kind==='textarea'?' notes':'');const lab=document.createElement('label');lab.textContent=label;wrapper.append(lab);
+  let input=kind==='textarea'?document.createElement('textarea'):kind==='select'?document.createElement('select'):document.createElement('input');
+  if(kind==='select'){for(const f of vault.folders){const opt=document.createElement('option');opt.value=f.id;opt.textContent=f.name;input.append(opt)}input.value=item.folderId;input.addEventListener('change',()=>{item.folderId=input.value;markChange(item);renderAll()})}
+  else{if(kind!=='textarea')input.type=kind==='password'?'password':'text';input.value=item[field];input.dataset.field=field;input.addEventListener('input',()=>{item[field]=input.value;markChange(item)})}
+  input.setAttribute('aria-label',label);wrapper.append(input);
+  if(kind==='password'){wrapper.append(makeButton('◉','顯示或隱藏密碼',()=>{input.type=input.type==='password'?'text':'password'}))}
+  if(kind==='password'||field==='account')wrapper.append(makeButton('⧉','複製'+label,()=>copyString(item[field])));
+  card.append(wrapper);
+ }
+ row('分類','folderId','select');row('帳號','account');row('密碼','password','password');row('備註','notes','textarea');
+ card.addEventListener('dragstart',e=>{e.stopPropagation();drag={kind:'item',id:item.id};card.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',item.id)});
+ card.addEventListener('dragend',()=>{drag=null;card.classList.remove('dragging')});
+ card.addEventListener('dragover',e=>{if(drag?.kind==='item')e.preventDefault()});card.addEventListener('drop',e=>{if(drag?.kind!=='item'||drag.id===item.id)return;e.preventDefault();e.stopPropagation();moveItem(drag.id,item.folderId,item.id)});
+ return card;
 }
-function render(){
-  renderFolders();renderItems();renderDetail();renderVaultStatus();
-  const q=$("#searchInput").value.trim();
-  const total=vault.items.filter(i=>!i.isDraft).length;
-  $("#countStatus").textContent=q
-    ? `找到 ${filteredItems().length} 筆結果${dirty&&!readonlyMode?" · 尚未匯出":""}`
-    : `${filteredItems().length} / ${total} 筆${dirty&&!readonlyMode?" · 尚未匯出":""}`;
+function moveItem(id,folderId,beforeId=null){if(modeMobile()||!vault||!vault.folders.some(f=>f.id===folderId)||beforeId===id)return;const index=vault.items.findIndex(x=>x.id===id);if(index<0)return;const [item]=vault.items.splice(index,1);item.folderId=folderId;let target=beforeId?vault.items.findIndex(x=>x.id===beforeId):-1;if(target<0)target=vault.items.length;vault.items.splice(target,0,item);markChange(item);drag=null;renderAll()}
+function attachDropZone(elem,folderId){elem.addEventListener('dragover',e=>{if(drag?.kind==='item')e.preventDefault()});elem.addEventListener('drop',e=>{if(drag?.kind!=='item')return;e.preventDefault();e.stopPropagation();moveItem(drag.id,folderId)})}
+function renderBoard(){
+ const q=$('search').value.trim().toLocaleLowerCase();const uncat=$('uncatItems');uncat.replaceChildren();const noItems=itemsIn('uncategorized').filter(i=>matchesQuery(i,q));for(const i of noItems)uncat.append(drawCard(i));$('uncatCount').textContent=noItems.length;$('uncatPending').textContent=noItems.some(i=>i.pendingBackup)?'●':'';$('uncatPending').style.color='var(--amber)';$('uncatColumn').classList.toggle('pending',noItems.some(i=>i.pendingBackup));
+ const board=$('desktopBoard');board.replaceChildren();board.classList.toggle('focused',!!focusedFolder);
+ if(focusedFolder){const holder=document.createElement('div');holder.className='focus-back';const b=document.createElement('button');b.className='btn';b.textContent='← 返回總覽';b.onclick=()=>{focusedFolder=null;renderBoard()};holder.append(b);board.append(holder)}
+ const list=vault.folders.filter(f=>f.id!=='uncategorized'&&(q||!focusedFolder||f.id===focusedFolder)).filter(f=>!q||itemsIn(f.id).some(i=>matchesQuery(i,q)));
+ for(const folder of list){const items=itemsIn(folder.id).filter(i=>matchesQuery(i,q));const isPending=items.some(i=>i.pendingBackup);const col=document.createElement('section');col.className='column'+(folder.collapsed&&!q&&!focusedFolder?' collapsed':'')+(focusedFolder&&!q?' focus-col':'')+(isPending?' pending':'');col.dataset.folderId=folder.id;col.style.setProperty('--folder-color',folder.color||COLORS[0]);col.draggable=!focusedFolder;
+ const head=document.createElement('header');head.className='column-head';head.title='按兩下可單獨檢視資料夾';head.addEventListener('dblclick',e=>{if(e.target.closest('button,input'))return;focusedFolder=focusedFolder?null:folder.id;renderBoard()});
+ const color=document.createElement('button');color.className='folder-color';color.title='變更資料夾顏色';color.onclick=()=>{folder.color=COLORS[(COLORS.indexOf(folder.color)+1+COLORS.length)%COLORS.length];markChange();renderBoard()};head.append(color);
+ const lab=document.createElement('div');lab.className='column-label';const name=document.createElement('input');name.className='folder-title';name.value=folder.name;name.title='修改資料夾名稱';name.onchange=()=>{const v=name.value.trim();if(v){folder.name=v;markChange();renderAll()}else name.value=folder.name};lab.append(name);head.append(lab);
+ if(isPending){const pill=document.createElement('span');pill.className='pill-new';pill.textContent='NEW';head.append(pill)}const count=document.createElement('span');count.className='folder-count';count.textContent=items.length;head.append(count);
+ head.append(makeButton(folder.collapsed?'▸':'⌄','展開或收合',()=>{folder.collapsed=!folder.collapsed;markChange();renderBoard()}));
+ head.append(makeButton('×','刪除資料夾',()=>{if(!confirm(`刪除「${folder.name}」資料夾？其中 ${itemsIn(folder.id).length} 筆帳密將移至未分類。`))return;for(const i of vault.items)if(i.folderId===folder.id)i.folderId='uncategorized';vault.folders=vault.folders.filter(f=>f.id!==folder.id);if(focusedFolder===folder.id)focusedFolder=null;markChange();renderAll()}));
+ col.append(head);const body=document.createElement('div');body.className='column-cards';if(items.length){for(const it of items)body.append(drawCard(it))}else{const empty=document.createElement('div');empty.className='empty-col';empty.textContent='拖曳帳密到這裡';body.append(empty)}col.append(body);attachDropZone(col,folder.id);
+ col.addEventListener('dragstart',e=>{if(e.target!==col)return;drag={kind:'folder',id:folder.id};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',folder.id)});col.addEventListener('dragover',e=>{if(drag?.kind==='folder')e.preventDefault()});col.addEventListener('drop',e=>{if(drag?.kind!=='folder'||drag.id===folder.id)return;e.preventDefault();e.stopPropagation();const a=vault.folders.findIndex(f=>f.id===drag.id),b=vault.folders.findIndex(f=>f.id===folder.id);if(a<0||b<0)return;const [f]=vault.folders.splice(a,1);vault.folders.splice(vault.folders.findIndex(f=>f.id===folder.id),0,f);drag=null;markChange();renderBoard()});col.addEventListener('dragend',()=>drag=null);
+ board.append(col)}
 }
-function renderVaultStatus(){
-  const name=$("#vaultFileName"),updated=$("#vaultUpdatedAt"),state=$("#backupState");
-  if(!name||!updated||!state||!vault)return;
-  name.textContent=currentVaultName||"尚未命名";
-  updated.textContent=vault.updatedAt?new Date(vault.updatedAt).toLocaleString():"—";
-  const hasDraft=vault.items.some(i=>i.isDraft);
-  if(hasDraft){state.textContent="有未完成草稿";state.className="unsaved";}
-  else if(dirty){state.textContent="尚未匯出";state.className="unsaved";}
-  else{state.textContent="已備份";state.className="saved";}
+function setTab(tab){currentTab=tab;$('mobilePage').className='mobile-page view-'+tab;for(const b of document.querySelectorAll('.mobile-tabs button'))b.classList.toggle('active',b.dataset.tab===tab)}
+function renderMobile(){
+ const folders=$('mobileFolders');folders.replaceChildren();const all=document.createElement('button');all.className='mfolder';all.innerHTML=`<span>所有項目</span><small>${vault.items.length}</small>`;all.onclick=()=>{currentFolder='all';setTab('list');renderMobile()};folders.append(all);
+ for(const f of vault.folders){const b=document.createElement('button');b.className='mfolder';const left=document.createElement('span');left.textContent=f.name;const right=document.createElement('small');right.textContent=itemsIn(f.id).length;b.append(left,right);b.onclick=()=>{currentFolder=f.id;setTab('list');renderMobile()};folders.append(b)}
+ const items=filterItems(),q=$('search').value.trim();$('mobileCount').textContent=q?`找到 ${items.length} 筆結果`:`${items.length} 筆帳密`;const list=$('mobileItems');list.replaceChildren();if(!items.length){const empty=document.createElement('p');empty.className='small';empty.textContent='找不到符合的帳密';list.append(empty)}
+ for(const i of items){const b=document.createElement('button');b.className='mitem';const glyph=document.createElement('div');glyph.className='micon';glyph.textContent=(i.title||'?').slice(0,1);const middle=document.createElement('div');middle.className='mitem-main';const title=document.createElement('div');title.className='mitem-title';title.innerHTML=highlight(i.title||'未命名',q);const sub=document.createElement('div');sub.className='mitem-sub';sub.innerHTML=highlight(i.account||i.notes||'尚無帳號',q);middle.append(title,sub);b.append(glyph,middle);b.onclick=()=>{selectedId=i.id;setTab('detail');renderDetail()};list.append(b)}renderDetail();
 }
-function filteredItems(){
-  const q=$("#searchInput").value.trim().toLowerCase();
-  const hasQuery=!!q;
-  return vault.items.filter(i=>{
-    if(i.isDraft)return false;
-    if(!hasQuery && currentFolder!=="all" && i.folderId!==currentFolder)return false;
-    if(!hasQuery)return true;
-    const folderName=folderNameById(i.folderId);
-    return [i.title,i.account,i.notes,folderName].some(x=>(x||"").toLowerCase().includes(q));
-  }).sort((a,b)=>a.title.localeCompare(b.title,"zh-Hant"));
+function hideReveal(){clearTimeout(revealTimer);revealTimer=null;const field=$('mobilePassword');if(field)field.textContent='••••••••••••'}
+function renderDetail(){const container=$('mobileDetail');container.replaceChildren();const i=vault.items.find(x=>x.id===selectedId);if(!i){const p=document.createElement('p');p.className='small';p.textContent='選擇一筆帳號查看詳細內容';container.append(p);return}const h=document.createElement('h2');h.textContent=i.title||'未命名';container.append(h);
+ function field(name,value,key,canCopy,reveal=false){const wrapper=document.createElement('div');wrapper.className='mobile-field';const lab=document.createElement('label');lab.textContent=name;const row=document.createElement('div');row.className='mobile-val-row';const val=document.createElement('div');val.className='mobile-val'+(reveal?' password':'');val.textContent=reveal?'••••••••••••':value||'—';if(reveal)val.id='mobilePassword';row.append(val);
+ if(reveal){const eye=document.createElement('button');eye.className='mobile-action';eye.textContent='◉';eye.title='顯示密碼 12 秒';eye.onclick=()=>{val.textContent=value||'—';clearTimeout(revealTimer);revealTimer=setTimeout(()=>{if(val.isConnected)val.textContent='••••••••••••'},12000)};row.append(eye)}
+ if(canCopy){const copy=document.createElement('button');copy.className='mobile-action';copy.textContent='⧉';copy.title='複製'+name;copy.onclick=()=>copyString(value);row.append(copy)}wrapper.append(lab,row);container.append(wrapper)}
+ field('帳號',i.account,'account',true);field('密碼',i.password,'password',true,true);field('備註',i.notes,'notes',false);const last=document.createElement('p');last.className='small';last.textContent='最後更新：'+new Date(i.updatedAt).toLocaleString();container.append(last);
 }
-function renderFolders(){
-  const completed=vault.items.filter(i=>!i.isDraft);
-  const counts={},pending={};
-  completed.forEach(i=>{
-    counts[i.folderId]=(counts[i.folderId]||0)+1;
-    if(i.pendingBackup)pending[i.folderId]=true;
-  });
-  const totalPending=completed.some(i=>i.pendingBackup);
-  let html=`<button class="folder ${currentFolder==="all"?"active":""} ${totalPending?"has-new":""}" data-folder="all"><span>所有項目</span><small>${completed.length}</small></button>`;
-  vault.folders.forEach(f=>html+=`<button class="folder ${currentFolder===f.id?"active":""} ${pending[f.id]?"has-new":""}" data-folder="${escapeHTML(f.id)}"><span>${escapeHTML(f.name)}${pending[f.id]?` <b class="pending-dot">NEW</b>`:""}</span><small>${counts[f.id]||0}</small></button>`);
-  $("#folders").innerHTML=html;
-  $$("#folders .folder").forEach(b=>b.onclick=()=>{currentFolder=b.dataset.folder;mobileTab("list");render()});
+function closeModal(){$('modal').classList.add('hidden');$('modalBody').replaceChildren();draft=null;if(pendingSave){pendingSave=null;postExport=false}if(masterPromptResolve){const resolve=masterPromptResolve;masterPromptResolve=null;resolve(null)}renderStatus()}
+function openModal(html){$('modalBody').innerHTML=html;$('modal').classList.remove('hidden')}
+function showNewItem(){if(modeMobile())return;draft={title:'',account:'',password:'',notes:'',folderId:currentFolder==='all'?'uncategorized':currentFolder};
+ openModal(`<h2>新增帳號</h2><div class="draft-note">填寫資料後，請按「✓ 完成新增」才會正式放進選定的資料夾。</div><div class="form-row"><label>標題</label><input id="d-title" autocomplete="off"></div><div class="form-row"><label>分類</label><select id="d-folder"></select></div><div class="form-row"><label>帳號</label><input id="d-account" autocomplete="off"></div><div class="form-row"><label>密碼</label><div class="passline"><input id="d-password" type="password" autocomplete="new-password"><button type="button" id="d-eye" class="btn" aria-label="顯示密碼">◉</button></div></div><div class="form-row"><label>備註</label><textarea id="d-notes"></textarea></div><div class="form-actions"><button id="d-cancel" class="btn">取消</button><button id="d-complete" class="btn confirm-complete">✓ 完成新增</button></div>`);
+ for(const f of vault.folders){const o=document.createElement('option');o.value=f.id;o.textContent=f.name;$('d-folder').append(o)}$('d-folder').value=draft.folderId;
+ $('d-eye').onclick=()=>{$('d-password').type=$('d-password').type==='password'?'text':'password'};$('d-cancel').onclick=closeModal;
+ $('d-complete').onclick=()=>{const title=$('d-title').value.trim(),account=$('d-account').value.trim(),password=$('d-password').value,folderId=$('d-folder').value,notes=$('d-notes').value;if(!title)return alert('請先輸入標題');if(!account)return alert('請先輸入帳號');if(!password)return alert('請先輸入密碼');if(!vault.folders.some(f=>f.id===folderId))return alert('請選擇有效分類');const newItem={id:uid(),title,account,password,notes,folderId,isDraft:false,pendingBackup:true,createdAt:stamp(),updatedAt:stamp()};vault.items.unshift(newItem);markChange(newItem);closeModal();currentFolder=folderId;renderAll();notify('✓ 已新增，黃色表示尚未匯出')};
+ $('d-title').focus();
 }
-function renderItems(){
-  const arr=filteredItems();
-  const q=$("#searchInput").value.trim();
-  $("#items").innerHTML=arr.length?arr.map(i=>{
-    const subText=i.account||i.notes||"尚未填寫帳號";
-    return `<div class="item ${selectedId===i.id?"active":""} ${i.pendingBackup?"is-new-unsaved":""}" data-id="${escapeHTML(i.id)}">
-      <div class="icon">${escapeHTML(iconText(i.title))}</div>
-      <div class="item-main">
-        <div class="item-title">${highlightMatch(i.title||"未命名",q)}${i.pendingBackup?` <span class="pending-item-label">新增</span>`:""}</div>
-        <div class="item-sub">${highlightMatch(subText,q)}</div>
-      </div>
-    </div>`;
-  }).join("")
-    :`<div class="detail-empty">找不到符合條件的項目</div>`;
-  $$("#items .item").forEach(el=>el.onclick=()=>{selectedId=el.dataset.id;mobileTab("detail");render()});
+function showNewFolder(){if(modeMobile())return;openModal(`<h2>新增資料夾</h2><div class="form-row"><label>資料夾名稱</label><input id="f-name" maxlength="80"></div><div class="form-actions"><button id="f-cancel" class="btn">取消</button><button id="f-confirm" class="btn primary">新增資料夾</button></div>`);$('f-cancel').onclick=closeModal;$('f-confirm').onclick=()=>{const name=$('f-name').value.trim();if(!name)return alert('請輸入名稱');vault.folders.push({id:'col-'+uid(),name,color:COLORS[vault.folders.length%COLORS.length],collapsed:false});markChange();closeModal();renderAll();notify('已新增資料夾，尚未匯出')};$('f-name').focus()}
+function download(blob,name){const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+function pendingCheck(){if(draft){alert('請先完成或取消新增草稿');return false}if(!vault)return false;return true}
+function ensureMaster(){return new Promise(resolve=>{if(masterPassword)return resolve(masterPassword);masterPromptResolve=resolve;openModal(`<h2>設定主密碼</h2><p class="small">至少 10 個字元；忘記主密碼後無法復原。</p><div class="form-row"><input type="password" id="p1" placeholder="主密碼" autocomplete="new-password"></div><div class="form-row"><input type="password" id="p2" placeholder="再輸入一次" autocomplete="new-password"></div><div class="form-actions"><button id="p-cancel" class="btn">取消</button><button id="p-confirm" class="btn primary">確認</button></div>`);$('p-cancel').onclick=closeModal;$('p-confirm').onclick=()=>{const a=$('p1').value;if(a.length<10)return alert('至少 10 個字元');if(a!==$('p2').value)return alert('兩次密碼不一致');masterPassword=a;masterPromptResolve=null;closeModal();resolve(a)}})}
+function contentSnapshot(data){return JSON.stringify({folders:data.folders,items:data.items.map(({pendingBackup,isDraft,createdAt,updatedAt,...item})=>item)})}
+function confirmBackup(saved){if(!vault||vault!==saved.source||sessionEpoch!==saved.session)return;const byId=new Map(saved.data.items.map(i=>[i.id,i]));for(const i of vault.items){const previous=byId.get(i.id);if(previous&&contentSnapshot({folders:[],items:[i]})===contentSnapshot({folders:[],items:[previous]}))i.pendingBackup=false}dirty=contentSnapshot(vault)!==saved.snapshot;changedSinceOpen=dirty;postExport=true;selectedFilename=saved.name;renderAll();notify(dirty?'已確認備份；之後的修改仍未匯出':'已確認匯出，請手動放入 iCloud')}
+async function exportBackup(asHtml){if(modeMobile()||exportBusy||pendingSave||!pendingCheck())return;exportBusy=true;const source=vault,session=sessionEpoch;$('exportBtn').disabled=$('htmlExportBtn').disabled=true;try{
+  const password=await ensureMaster();if(!password||vault!==source||sessionEpoch!==session)return;
+  // Never serialize decrypted live DOM. The output contains encrypted ciphertext only.
+  const clean=structuredClone(vault);clean.appVersion=APP_VERSION;for(const i of clean.items){i.pendingBackup=false;i.isDraft=false}
+  const snapshot=contentSnapshot(clean),payload=await encrypt(clean,password);if(vault!==source||sessionEpoch!==session)return;let blob,name;const ts=fileStamp();
+  if(asHtml){const safePayload=JSON.stringify(payload).replace(/</g,'\\u003c');const tag=`<script id="embedded-vault" type="application/json">${safePayload}<\/script>`;const html=CLEAN_SOURCE.replace(/<script id="embedded-vault" type="application\/json">[\s\S]*?<\/script>/,tag);if(!html.includes(safePayload))throw Error('加密備份插入失敗');blob=new Blob([html],{type:'text/html;charset=utf-8'});name=`PassVault_${ts}_encrypted.html`}
+  else{blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});name=`PassVault_${ts}.pvault`}
+  download(blob,name);pendingSave={data:clean,snapshot,source,session,name};renderStatus();
+  openModal('<h2>確認加密備份</h2><p class="small">已啟動下載。請確認檔案已儲存；之後仍須手動放入 iCloud Drive。</p><div class="form-actions"><button class="btn" id="backupCancel">未儲存／取消</button><button class="btn primary" id="backupConfirm">已儲存下載檔</button></div>');
+  $('backupCancel').onclick=closeModal;$('backupConfirm').onclick=()=>{const saved=pendingSave;pendingSave=null;closeModal();if(saved)confirmBackup(saved)};
+ }catch{if(vault===source&&sessionEpoch===session){notify('匯出失敗，未匯出提示保留');renderStatus()}}finally{exportBusy=false;$('exportBtn').disabled=$('htmlExportBtn').disabled=false}}
+function exportCSV(){if(modeMobile()||!pendingCheck())return;openModal(`<h2>Excel／CSV 明文匯出</h2><p class="bad">注意：CSV 沒有加密，可能暴露帳號與密碼。僅在確實需要時使用，切勿上傳 GitHub。</p><label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="csvPasswords" style="width:auto;min-height:auto">包含密碼欄位（預設不包含）</label><div class="form-actions"><button id="csvCancel" class="btn">取消</button><button id="csvConfirm" class="btn warn">匯出 CSV</button></div>`);$('csvCancel').onclick=closeModal;$('csvConfirm').onclick=()=>{const include=$('csvPasswords').checked;if(include&&!confirm('CSV 內含明文密碼，確定匯出？'))return;
+ const cell=v=>{let s=String(v??'');if(/^[\s]*[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};const cols=['分類','標題','帳號',...(include?['密碼']:[]),'備註'];const rows=[cols,...vault.items.map(i=>[folderName(i.folderId),i.title,i.account,...(include?[i.password]:[]),i.notes])];const csv='\ufeff'+rows.map(row=>row.map(cell).join(',')).join('\r\n');download(new Blob([csv],{type:'text/csv;charset=utf-8'}),`PassVault_${fileStamp()}.csv`);closeModal();notify('已匯出 CSV（不加密）')}}
+async function handleTxt(files){if(modeMobile()||!vault)return;const source=vault,session=sessionEpoch;try{let all=[];for(const f of files){if(!f.name.toLowerCase().endsWith('.txt'))continue;const blocks=(await f.text()).replace(/\r\n/g,'\n').split(/\n[ \t]*\n/);for(const block of blocks){const lines=block.replace(/^\n+|\n+$/g,'').split('\n');if(!lines[0]?.trim())continue;all.push({id:uid(),title:lines[0].trim(),account:lines[1]||'',password:lines[2]||'',notes:lines.slice(3).join('\n'),folderId:'uncategorized',pendingBackup:true,isDraft:false,createdAt:stamp(),updatedAt:stamp()})}}
+ if(vault!==source||sessionEpoch!==session)return;if(!all.length)return notify('沒有找到可匯入的 TXT 帳密');if(!confirm(`從 TXT 新增 ${all.length} 筆至「未分類」？`))return;vault.items.unshift(...all);markChange();renderAll();notify('TXT 匯入完成，尚未匯出')}catch{if(vault===source&&sessionEpoch===session)notify('TXT 讀取失敗，原資料未變更')}}
+async function handleVaultInput(file){const session=++sessionEpoch;incoming=null;try{const p=validatePayload(JSON.parse(await file.text()));if(session!==sessionEpoch)return;incoming=p;selectedFilename=file.name;$('unlockArea').classList.remove('hidden');$('masterInput').value='';statusText(`已選擇：${file.name}`);$('masterInput').focus()}catch{if(session===sessionEpoch){incoming=null;statusText('讀取失敗：格式不支援或檔案已損毀',true)}}}
+async function handleHTMLInput(file){if(vault&&!confirm('讀取另一份 HTML 會取代目前開啟的密碼庫。請確認已匯出最新修改。繼續嗎？'))return;const session=++sessionEpoch;incoming=null;try{const template=document.createElement('template');template.innerHTML=await file.text();if(session!==sessionEpoch)return;const doc=template.content,ciphers=doc.querySelectorAll('#embedded-vault'),legacies=doc.querySelectorAll('#embedded-data');if(ciphers.length>1||legacies.length>1)throw Error('備份節點不唯一');const cipher=ciphers[0];if(cipher?.textContent?.trim()){const p=validatePayload(JSON.parse(cipher.textContent));if(vault)lockForced();incoming=p;selectedFilename=file.name;$('unlockArea').classList.remove('hidden');$('masterInput').value='';statusText('已載入加密 HTML，請輸入主密碼');$('masterInput').focus();return}
+ const legacy=legacies[0];if(!legacy?.textContent?.trim())throw Error('未發現可匯入的密碼庫');const data=JSON.parse(legacy.textContent),converted=migrateV7(data);const original=Object.keys(data.tasks||{}).length;
+ openModal(`<h2>舊 HTML 匯入分析</h2><p>原有帳密：${original} 筆<br>可轉換帳密：${converted.items.length} 筆<br>資料夾：${converted.folders.length} 個</p><p class="small">不會修改來源檔案。匯入後請建立新的加密 .pvault 備份。</p><div class="form-actions"><button class="btn" id="legacyCancel">取消</button><button class="btn primary" id="legacyOK">確認匯入</button></div>`);$('legacyCancel').onclick=closeModal;$('legacyOK').onclick=()=>{if(sessionEpoch!==session)return;if(original!==converted.items.length)return alert('筆數不一致，請先檢查來源檔');sessionEpoch++;vault=converted;masterPassword='';selectedFilename=file.name;dirty=true;postExport=false;closeModal();showApp();notify('舊版已轉換，請匯出加密備份')};
+ }catch{if(session===sessionEpoch){const message='HTML 匯入失敗：格式不支援、索引不完整或備份節點重複，原資料未變更';statusText(message,true);if(vault)notify(message)}}}
+async function unlockNow(){const password=$('masterInput').value;if(!password)return statusText('請先輸入主密碼',true);const session=++sessionEpoch,payload=incoming;try{const decoded=normalize(await decrypt(payload,password));if(session!==sessionEpoch)return;vault=decoded;masterPassword=modeMobile()?'':password;$('masterInput').value='';incoming=null;dirty=false;postExport=false;changedSinceOpen=false;showApp()}catch{if(session===sessionEpoch)statusText('主密碼不正確、檔案損毀或格式不支援',true)}}
+function beginBackground(){hideReveal();if(!modeMobile()||!vault)return;if(hiddenAt===null)hiddenAt=Date.now();clearTimeout(backgroundTimer);backgroundTimer=setTimeout(()=>{if(vault&&hiddenAt!==null&&Date.now()-hiddenAt>=30000){lockForced();statusText('已自動鎖定，請重新開啟密碼庫')}},Math.max(0,30000-(Date.now()-hiddenAt)))}
+function resumeBackground(){clearTimeout(backgroundTimer);backgroundTimer=null;const expired=hiddenAt!==null&&Date.now()-hiddenAt>=30000;hiddenAt=null;if(expired&&modeMobile()&&vault){lockForced();statusText('已自動鎖定，請重新開啟密碼庫')}}
+function returnFolders(){$('search').value='';currentFolder='all';selectedId=null;hideReveal();setTab('folders');renderMobile()}
+function install(){document.body.classList.toggle('mobile-mode',modeMobile());$('newVault').classList.toggle('hidden',modeMobile());setVersion();$('vaultInput').onchange=e=>{const f=e.target.files[0];if(f)handleVaultInput(f);e.target.value=''};$('htmlInput').onchange=e=>{const f=e.target.files[0];if(f)handleHTMLInput(f);e.target.value=''};$('htmlInputPC').onchange=e=>{const f=e.target.files[0];if(f)handleHTMLInput(f);e.target.value=''};$('unlockBtn').onclick=unlockNow;$('masterInput').onkeydown=e=>{if(e.key==='Enter')unlockNow()};$('newVault').onclick=()=>{if(modeMobile())return;sessionEpoch++;incoming=null;$('masterInput').value='';vault=normalize(emptyVault());masterPassword='';selectedFilename='新密碼庫';dirty=true;postExport=false;showApp()};$('lockBtn').onclick=lock;
+ $('addItem').onclick=showNewItem;$('addFolder').onclick=showNewFolder;$('exportBtn').onclick=()=>exportBackup(false);$('htmlExportBtn').onclick=()=>exportBackup(true);$('csvBtn').onclick=exportCSV;$('txtInput').onchange=e=>{handleTxt([...e.target.files]);e.target.value=''};$('search').oninput=()=>{if(modeMobile())setTab('list');renderAll()};$('backBtn').onclick=returnFolders;
+ $('uncatColumn').addEventListener('dragover',e=>{if(drag?.kind==='item')e.preventDefault()});$('uncatColumn').addEventListener('drop',e=>{if(drag?.kind==='item'){e.preventDefault();moveItem(drag.id,'uncategorized')}});
+ document.querySelectorAll('.mobile-tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab!=='detail')hideReveal();setTab(b.dataset.tab)});$('modal').onclick=e=>{if(e.target===$('modal'))closeModal()};
+ document.addEventListener('visibilitychange',()=>{document.hidden?beginBackground():resumeBackground()});window.addEventListener('pagehide',beginBackground);window.addEventListener('pageshow',resumeBackground);window.addEventListener('focus',()=>{if(!document.hidden)resumeBackground()});
+ window.addEventListener('beforeunload',e=>{if((dirty||draft)&&!modeMobile()){e.preventDefault();e.returnValue=''}});
+ const embedded=$('embedded-vault').textContent.trim();if(embedded){try{incoming=validatePayload(JSON.parse(embedded));$('unlockArea').classList.remove('hidden');statusText('已找到此 HTML 的加密密碼庫，輸入主密碼即可開啟');$('masterInput').focus()}catch{incoming=null;statusText('HTML 內的加密備份格式有誤',true)}}
 }
-function renderDetail(){
-  const box=$("#detailBody"),i=vault.items.find(x=>x.id===selectedId);
-  if(!i){box.innerHTML='<div class="detail-empty">選擇一筆帳號<br>即可查看詳細內容</div>';return}
-  if(readonlyMode){renderReadonly(box,i);return}
-  renderEdit(box,i);
-}
-function renderReadonly(box,i){
-  box.innerHTML=`<div class="detail-title-row"><div class="detail-title">${escapeHTML(i.title||"未命名")}</div></div>
-    ${viewField("帳號",i.account,"account",true)}
-    ${viewField("密碼","••••••••••••","password",true,true)}
-    ${viewField("備註",i.notes,"notes",false)}
-    <div class="meta">最後更新：${new Date(i.updatedAt).toLocaleString()}<br>資料只在本機瀏覽器記憶體解密顯示。</div>`;
-  bindViewButtons(i);
-}
-function viewField(label,value,key,copyable,reveal=false){
-  return `<div class="field"><label>${label}</label><div class="value-row"><div class="value ${key==="password"?"mono":""}" id="val-${key}">${escapeHTML(value||"—")}</div>
-  ${reveal?`<button class="icon-btn" data-action="reveal" title="顯示">👁</button>`:""}
-  ${copyable?`<button class="icon-btn" data-copy="${key}" title="複製">⧉</button>`:""}</div></div>`;
-}
-function bindViewButtons(i){
-  $$("[data-copy]").forEach(b=>b.onclick=()=>copyText(i[b.dataset.copy]||""));
-  const r=$('[data-action="reveal"]');if(r)r.onclick=()=>{
-    const el=$("#val-password");el.textContent=i.password||"—";setTimeout(()=>{if(el)el.textContent="••••••••••••"},12000);
-  };
-}
-function renderEdit(box,i){
-  const opts=vault.folders.map(f=>`<option value="${escapeHTML(f.id)}" ${i.folderId===f.id?"selected":""}>${escapeHTML(f.name)}</option>`).join("");
-  box.innerHTML=`<div class="detail-title-row"><input class="edit-input" data-field="title" value="${escapeHTML(i.title)}" placeholder="標題">
-    ${i.isDraft?"":`<button class="icon-btn" id="deleteBtn" title="刪除">✕</button>`}</div>
-    ${i.isDraft?`<div class="draft-note"><b>新增帳密尚未完成</b><br>填寫內容並選擇分類後，請按下方「✓ 完成新增」。</div>`:""}
-    <div class="field"><label>分類</label><select class="edit-select" data-field="folderId">${opts}</select></div>
-    ${editField("帳號","account",i.account)}
-    ${editField("密碼","password",i.password,true)}
-    <div class="field"><label>備註</label><textarea class="edit-textarea" data-field="notes">${escapeHTML(i.notes)}</textarea></div>
-    ${i.isDraft?`<div class="draft-actions">
-      <button class="draft-cancel" id="cancelDraftBtn">取消</button>
-      <button class="draft-complete" id="completeBtn"><span style="font-size:21px">✓</span> 完成新增</button>
-    </div>`:`<div class="meta">建立：${new Date(i.createdAt).toLocaleString()}<br>最後更新：${new Date(i.updatedAt).toLocaleString()}</div>`}`;
-  $$("[data-field]").forEach(el=>el.oninput=()=>{
-    i[el.dataset.field]=el.value;i.updatedAt=nowIso();vault.updatedAt=nowIso();dirty=true;renderItems();
-    const q=$("#searchInput").value.trim();
-    const total=vault.items.filter(x=>!x.isDraft).length;
-    $("#countStatus").textContent=q?`找到 ${filteredItems().length} 筆結果 · 尚未匯出`:`${filteredItems().length} / ${total} 筆 · 尚未匯出`;
-  });
-  if(i.isDraft){
-    $("#completeBtn").onclick=()=>{
-      if(!i.title.trim()){alert("請先輸入標題");return;}
-      if(!i.account.trim()){alert("請先輸入帳號");return;}
-      if(!i.password){alert("請先輸入密碼");return;}
-      if(!i.folderId){alert("請先選擇分類");return;}
-      i.isDraft=false;
-      i.pendingBackup=true;
-      i.updatedAt=nowIso();
-      vault.updatedAt=nowIso();
-      currentFolder=i.folderId;
-      selectedId=null;
-      dirty=true;
-      render();
-      toast("新增完成，尚未匯出備份");
-    };
-    $("#cancelDraftBtn").onclick=()=>{
-      if(!confirm("確定取消這筆新增資料嗎？"))return;
-      vault.items=vault.items.filter(x=>x.id!==i.id);
-      selectedId=null;
-      render();
-    };
-  }else{
-    $("#deleteBtn").onclick=()=>confirm("確定刪除這筆帳密？")&&(vault.items=vault.items.filter(x=>x.id!==i.id),selectedId=null,dirty=true,render());
-  }
-  $$("[data-copy]").forEach(b=>b.onclick=()=>copyText(i[b.dataset.copy]||""));
-  $$("[data-toggle-password]").forEach(button=>{
-    button.onclick=()=>{
-      const row=button.closest(".value-row");
-      const input=row?.querySelector('input[data-field="password"]');
-      if(!input)return;
-      const willShow=input.type==="password";
-      input.type=willShow?"text":"password";
-      button.setAttribute("aria-label",willShow?"隱藏密碼":"顯示密碼");
-      button.title=willShow?"隱藏密碼":"顯示密碼";
-    };
-  });
-}
-function editField(label,key,value,password=false){
-  return `<div class="field"><label>${label}</label><div class="value-row"><input ${password?'type="password"':'type="text"'} class="edit-input ${password?"mono":""}" data-field="${key}" value="${escapeHTML(value)}">
-  ${password?`<button class="icon-btn" data-toggle-password="${key}" title="顯示／隱藏">👁</button>`:""}
-  <button class="icon-btn" data-copy="${key}">⧉</button></div></div>`;
-}
-async function copyText(text){
-  if(!text)return;try{await navigator.clipboard.writeText(text);toast("已複製")}catch{toast("瀏覽器無法使用剪貼簿")}
-}
-function toast(msg){
-  let t=document.getElementById("floatingToast");
-  if(!t){t=document.createElement("div");t.id="floatingToast";t.className="floating-toast";document.body.appendChild(t)}
-  t.textContent=msg;t.classList.add("show");clearTimeout(t._timer);
-  t._timer=setTimeout(()=>t.classList.remove("show"),1800);
-}
-function mobileTab(tab){
-  if(innerWidth>MOBILE_BREAKPOINT)return;
-  const l=$("#layout");l.classList.remove("show-folders","show-detail");
-  if(tab==="folders")l.classList.add("show-folders");if(tab==="detail")l.classList.add("show-detail");
-  $$(".mobile-tabbar button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
-}
-function openModal(html){$("#modalCard").innerHTML=html;$("#modal").classList.remove("hidden")}
-function closeModal(){$("#modal").classList.add("hidden")}
-function addItem(){
-  const folder=currentFolder==="all"?(vault.folders[0]?.id||""):currentFolder;
-  const i={id:uid(),title:"",account:"",password:"",notes:"",folderId:folder,isDraft:true,pendingBackup:false,createdAt:nowIso(),updatedAt:nowIso()};
-  vault.items.unshift(i);
-  selectedId=i.id;
-  render();
-  setTimeout(()=>document.querySelector('[data-field="title"]')?.focus(),0);
-}
-async function exportVault(){
-  if(!masterKeyPassword){
-    openModal(`<h2>設定主密碼</h2><p class="small">請輸入至少 10 個字元。主密碼不會儲存在檔案中。</p>
-    <input id="newPass" class="edit-input" type="password" placeholder="主密碼">
-    <input id="newPass2" class="edit-input" type="password" placeholder="再次輸入" style="margin-top:10px">
-    <div class="modal-actions"><button class="btn" onclick="closeModal()">取消</button><button id="confirmExport" class="btn primary">加密並匯出</button></div>`);
-    $("#confirmExport").onclick=async()=>{
-      const a=$("#newPass").value,b=$("#newPass2").value;if(a.length<10)return alert("主密碼至少 10 個字元");if(a!==b)return alert("兩次密碼不一致");
-      masterKeyPassword=a;closeModal();await doExport();
-    };return;
-  }
-  await doExport();
-}
-async function doExport(){
-  if(vault.items.some(i=>i.isDraft)){alert("尚有未按 ✓ 完成的新增資料，請先完成或刪除草稿。");return;}
-  vault.items.forEach(i=>i.pendingBackup=false);
-  vault.updatedAt=nowIso();const payload=await encryptVault(vault,masterKeyPassword);
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-  const a=document.createElement("a"),date=new Date().toISOString().slice(0,10).replaceAll("-","");
-  a.href=URL.createObjectURL(blob);a.download=`PassVault_${date}.pvault`;currentVaultName=a.download;a.click();URL.revokeObjectURL(a.href);dirty=false;render();toast("已匯出加密備份");
-}
-async function readText(file){return await file.text()}
-async function handleVaultFile(file){
-  try{
-    unlockPayload=JSON.parse(await readText(file));
-    if(unlockPayload.format!=="passvault")throw new Error();
-    currentVaultName=file.name;
-    $("#unlockBox").classList.remove("hidden");setMsg(`已選擇：${file.name}`,"good");$("#masterPassword").focus();
-  }catch{setMsg("這不是有效的 .pvault 檔案","bad")}
-}
-async function handleLegacyFile(file){
-  try{
-    const doc=new DOMParser().parseFromString(await readText(file),"text/html");
-    const node=doc.getElementById("embedded-data");if(!node)throw new Error("找不到 embedded-data");
-    const legacy=JSON.parse(node.textContent);const converted=convertLegacy(legacy);
-    currentVaultName=file.name;
-    const oldCount=Object.keys(legacy.tasks||{}).length,newCount=converted.items.length;
-    openModal(`<h2>HTML 匯入分析</h2><div class="report">舊版帳密：${oldCount} 筆<br>新版帳密：${newCount} 筆<br>分類：${converted.folders.length} 個<br>遺失：${Math.max(0,oldCount-newCount)} 筆</div>
-    <p class="small">原始 HTML 不會被修改。確認後只會在瀏覽器記憶體中開啟，之後請匯出新的加密 .pvault。</p>
-    <div class="modal-actions"><button class="btn" onclick="closeModal()">取消</button><button id="acceptLegacy" class="btn primary">確認轉換並開啟</button></div>`);
-    $("#acceptLegacy").onclick=()=>{vault=normalizeVault(converted);masterKeyPassword="";dirty=true;closeModal();showApp()};
-  }catch(e){setMsg("讀取舊版失敗："+e.message,"bad")}
-}
-$("#vaultFile").onchange=e=>e.target.files[0]&&handleVaultFile(e.target.files[0]);
-$("#legacyFile").onchange=e=>e.target.files[0]&&handleLegacyFile(e.target.files[0]);
-$("#unlockBtn").onclick=async()=>{
-  const p=$("#masterPassword").value;if(!p)return setMsg("請輸入主密碼","bad");
-  try{vault=normalizeVault(await decryptVault(unlockPayload,p));masterKeyPassword=p;dirty=false;showApp()}
-  catch{setMsg("主密碼錯誤，或檔案已損毀","bad")}
-};
-$("#masterPassword").onkeydown=e=>e.key==="Enter"&&$("#unlockBtn").click();
-$("#newVaultBtn").onclick=()=>{vault=emptyVault();masterKeyPassword="";currentVaultName="新的密碼庫";dirty=true;showApp()};
-$("#searchInput").oninput=()=>{ if(readonlyMode&&innerWidth<=MOBILE_BREAKPOINT) mobileTab("list"); render(); };
-$("#backToFoldersBtn").onclick=()=>{
-  $("#searchInput").value="";
-  currentFolder="all";
-  selectedId=null;
-  mobileTab("folders");
-  render();
-};
-$("#allFilter").onclick=()=>{currentFolder="all";render()};
-$("#addBtn").onclick=addItem;$("#saveBtn").onclick=exportVault;$("#lockBtn").onclick=()=>{if(dirty&&!confirm("尚未匯出最新修改，仍要鎖定嗎？"))return;lockApp()};
-$$(".mobile-tabbar button").forEach(b=>b.onclick=()=>mobileTab(b.dataset.tab));
-$("#modal").onclick=e=>{if(e.target===$("#modal"))closeModal()};
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&readonlyMode&&vault)setTimeout(()=>{if(document.hidden)lockApp()},30000)});
-window.addEventListener("beforeunload",e=>{if(dirty&&!readonlyMode){e.preventDefault();e.returnValue=""}});
-window.closeModal=closeModal;
+install();
 </script>
 </body>
 </html>
